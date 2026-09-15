@@ -29,13 +29,6 @@ const labels: Record<string, string> = {
 const profileFields: [keyof Profile, string, string][] = [
   ["fio", "ФИО *", "text"],
   ["email", "Email для ответа *", "email"],
-  ["inn", "ИНН заявителя", "text"],
-  ["phone", "Телефон", "tel"],
-  ["series", "Серия паспорта", "text"],
-  ["number", "Номер паспорта", "text"],
-  ["issuer", "Кем выдан паспорт", "text"],
-  ["city", "Город выдачи", "text"],
-  ["issued", "Дата выдачи", "date"],
   ["date", "Дата обращения *", "date"],
 ];
 const today = () => {
@@ -180,7 +173,7 @@ async function mountPanel(onClose: () => void) {
   left.append(
     el(
       "p",
-      "ФИО, email и заполненные дополнительные данные сохраняются в Tampermonkey до нажатия «Очистить данные». В новой вкладке дата обращения — сегодняшняя. Изменения шаблона действуют только в текущей вкладке. Подписи и вложения добавляются вручную.",
+      "ФИО и email сохраняются в Tampermonkey до нажатия «Очистить данные». В новой вкладке дата обращения — сегодняшняя. Изменения шаблона действуют только в текущей вкладке. Подписи и вложения добавляются вручную.",
       "muted",
     ),
   );
@@ -257,7 +250,7 @@ async function mountPanel(onClose: () => void) {
     field("Текст", body),
     el(
       "p",
-      "Подстановки: {{ФИО}}, {{Компания}}, {{Email}}, {{Дата}}. Служебная шапка не добавляется. Дата, заполненные дополнительные реквизиты и инструкции компании включаются в письмо.",
+      "Подстановки: {{ФИО}}, {{Компания}}, {{Email}}, {{Дата}}. Служебная шапка не добавляется. Дата и инструкции компании включаются в письмо.",
       "muted",
     ),
     button(
@@ -388,9 +381,16 @@ async function mountPanel(onClose: () => void) {
     }
   }
   function profile(): Profile {
-    return Object.fromEntries(
-      [...inputs].map(([k, v]) => [k, v.value.trim()]),
-    ) as unknown as Profile;
+    return {
+      inn: "",
+      phone: "",
+      series: "",
+      number: "",
+      issuer: "",
+      city: "",
+      issued: "",
+      ...Object.fromEntries([...inputs].map(([k, v]) => [k, v.value.trim()])),
+    } as Profile;
   }
   function restoreProfile() {
     try {

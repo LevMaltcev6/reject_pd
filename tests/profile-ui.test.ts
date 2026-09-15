@@ -149,13 +149,6 @@ function control(root: ShadowRoot, name: string) {
 const personal = {
   fio: " Иванов Иван Иванович ",
   email: "reply@example.invalid",
-  inn: "123456789012",
-  phone: "+79991234567",
-  series: "1234",
-  number: "567890",
-  issuer: "Тестовое подразделение",
-  city: "Москва",
-  issued: "2020-01-02",
 };
 function assertPersonal(root: ShadowRoot, expected: Record<string, string>) {
   for (const [name, value] of Object.entries(expected)) {
@@ -175,7 +168,7 @@ test("built profile UI restores all entered fields after closing, reopening and 
   for (const [name, value] of Object.entries(personal))
     first.input(root, name, value);
   await until(
-    () => JSON.stringify(values.get(PROFILE_KEY)).includes(personal.issuer),
+    () => JSON.stringify(values.get(PROFILE_KEY)).includes(personal.email),
     "profile input must be saved before closing the panel",
   );
   const writesBeforeClose = first.writes.length;
@@ -211,27 +204,21 @@ test("built UI persists partial edits and explicit deletions without requiring a
   const root = await first.open();
   first.input(root, "fio", "Иванов Иван");
   first.input(root, "email", personal.email);
-  first.input(root, "number", personal.number);
   await until(
-    () => JSON.stringify(values.get(PROFILE_KEY)).includes(personal.number),
+    () => JSON.stringify(values.get(PROFILE_KEY)).includes(personal.email),
     "initial profile must save",
   );
   first.input(root, "fio", "Ива");
   first.input(root, "email", "");
-  first.input(root, "number", "");
   await until(() => {
     const saved = JSON.stringify(values.get(PROFILE_KEY));
-    return (
-      saved.includes("Ива") &&
-      !saved.includes(personal.email) &&
-      !saved.includes(personal.number)
-    );
+    return saved.includes("Ива") && !saved.includes(personal.email);
   }, "deletions must replace previously stored fields");
   first.close();
 
   const reloaded = page(values);
   t.after(() => reloaded.close());
-  assertPersonal(await reloaded.open(), { fio: "Ива", email: "", number: "" });
+  assertPersonal(await reloaded.open(), { fio: "Ива", email: "" });
 });
 
 test("persistent profile excludes date, selected companies, templates and letter session data", async (t) => {
@@ -376,7 +363,6 @@ test("automatic job expiry clears temporary work while preserving saved profile 
   const root = await first.open();
   first.input(root, "fio", personal.fio);
   first.input(root, "email", personal.email);
-  first.input(root, "series", personal.series);
   const companyCard = [...root.querySelectorAll("details")].find(
     (details) =>
       details.querySelector("summary")?.textContent ===
@@ -421,7 +407,6 @@ test("automatic job expiry clears temporary work while preserving saved profile 
   assertPersonal(root, {
     fio: personal.fio,
     email: personal.email,
-    series: personal.series,
   });
   assert.equal(
     [...root.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')].some(
@@ -437,7 +422,6 @@ test("automatic job expiry clears temporary work while preserving saved profile 
   assertPersonal(newRoot, {
     fio: personal.fio,
     email: personal.email,
-    series: personal.series,
   });
   assert.deepEqual(values.get(catalogKey), savedCatalog);
   assert.deepEqual(values.get(foreignKey), foreignJob);
@@ -463,4 +447,38 @@ test("composed text is saved on compositionend without persisting an intermediat
     "finished composition must save",
   );
   assert.equal(root.querySelector('input[name="fio"]'), input);
+});
+
+test("removed personal fields are absent and legacy saved values never enter preview", async (t) => {
+  const legacy = {
+    inn: "LEGACY_INN",
+    phone: "LEGACY_PHONE",
+    series: "LEGACY_SERIES",
+    number: "LEGACY_NUMBER",
+    issuer: "LEGACY_ISSUER",
+    city: "LEGACY_CITY",
+    issued: "2000-01-01",
+  };
+  const values = new Map<string, unknown>([
+    [PROFILE_KEY, { ...personal, ...legacy }],
+  ]);
+  const current = page(values);
+  t.after(() => current.close());
+  const root = await current.open();
+  assertPersonal(root, personal);
+  for (const key of Object.keys(legacy)) {
+    assert.equal(root.querySelector(`input[name="${key}"]`), null);
+  }
+  root.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click();
+  await until(
+    () => (root.textContent || "").includes("ОТЗЫВ СОГЛАСИЯ"),
+    "preview must render",
+  );
+  for (const value of Object.values(legacy)) {
+    assert.ok(
+      !(root.textContent || "").includes(value),
+      `legacy value ${value} must not enter preview`,
+    );
+  }
+  assert.ok(!(root.textContent || "").includes("Серия паспорта"));
 });

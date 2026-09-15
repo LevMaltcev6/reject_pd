@@ -102,8 +102,8 @@ for (const mode of ["withdrawal", "inquiry"] satisfies Mode[]) {
         assert.equal(letter.missing.length, 0);
       } else {
         assert.doesNotMatch(letter.body, /Паспорт:|Телефон:/);
-        assert.ok(letter.missing.includes("Серия паспорта"));
-        assert.ok(letter.missing.includes("Номер паспорта"));
+        assert.ok(!letter.missing.includes("Серия паспорта"));
+        assert.ok(!letter.missing.includes("Номер паспорта"));
         assert.doesNotMatch(letter.body, /\{\{|\[[^\]]+\]/);
       }
     });

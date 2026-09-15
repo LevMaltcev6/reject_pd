@@ -35,17 +35,6 @@ export function makeLetter(
     Дата: p.date,
   };
   const missing: string[] = [];
-  for (const [key, label] of Object.entries({
-    inn: "ИНН заявителя",
-    phone: "Телефон",
-    series: "Серия паспорта",
-    number: "Номер паспорта",
-    issuer: "Кем выдан паспорт",
-    city: "Город выдачи",
-    issued: "Дата выдачи",
-  })) {
-    if (!p[key as keyof Profile].trim()) missing.push(label);
-  }
   if (!c.legalName?.trim())
     missing.push("Юридическое наименование организации");
   if (!c.inn?.trim()) missing.push("ИНН организации");
