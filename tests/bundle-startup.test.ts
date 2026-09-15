@@ -146,9 +146,9 @@ for (const scenario of cases)
     await tick();
     assert.ok(host.isConnected);
     assert.ok(
-      host.shadowRoot!.querySelector("button")!.textContent?.includes("0.2.7"),
+      host.shadowRoot!.querySelector("button")!.textContent?.includes("0.2.8"),
     );
-    assert.ok(menus.some((x) => x.includes("0.2.7")));
+    assert.ok(menus.some((x) => x.includes("0.2.8")));
     w.document.body.replaceChildren();
     await tick();
     assert.ok(host.isConnected);

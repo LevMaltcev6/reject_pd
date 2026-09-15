@@ -35,10 +35,6 @@ export function makeLetter(
     Дата: p.date,
   };
   const missing: string[] = [];
-  if (!c.legalName?.trim())
-    missing.push("Юридическое наименование организации");
-  if (!c.inn?.trim()) missing.push("ИНН организации");
-  if (!c.ogrn?.trim()) missing.push("ОГРН организации");
   if (mode === "inquiry" && !interaction.trim())
     missing.push("Сведения о взаимодействии / обработке данных");
   // Email already has sender/recipient fields. Keep optional identification

@@ -72,7 +72,7 @@ test("missing optional values are reported without empty placeholders", () => {
     phone: "",
   };
   const l = makeLetter(data.companies[0], p, "inquiry", data.templates.inquiry);
-  assert.equal(l.missing.length, 4);
+  assert.equal(l.missing.length, 1);
   assert.doesNotMatch(l.body, /Паспорт:|Телефон:|\[|\{\{/);
   assert.ok(l.actions.some((a) => a.includes("не подписан")));
 });

@@ -219,7 +219,7 @@ async function mountPanel(onClose: () => void) {
   left.append(companyList);
   let current = companies[0];
   const card = el("details");
-  card.append(el("summary", "Реквизиты и примечания компании"));
+  card.append(el("summary", "Адреса и примечания компании"));
   left.append(card);
   const companyFields = el("div", undefined, "fields");
   card.append(companyFields);
@@ -447,27 +447,17 @@ async function mountPanel(onClose: () => void) {
   }
   function renderCard() {
     companyFields.replaceChildren();
-    for (const [key, label] of [
-      ["legalName", "Юридическое наименование"],
-      ["inn", "ИНН организации"],
-      ["ogrn", "ОГРН организации"],
-      ["emails", "Email получателей через запятую"],
-    ] as const) {
-      const input = el("input");
-      input.value =
-        key === "emails" ? current.emails.join(", ") : current[key] || "";
-      input.oninput = () => {
-        if (key === "emails")
-          current.emails = input.value
-            .split(/[,;]/)
-            .map((s) => s.trim())
-            .filter(Boolean);
-        else current[key] = input.value.trim();
-        saveCatalog();
-        schedulePreview();
-      };
-      companyFields.append(field(label, input));
-    }
+    const input = el("input");
+    input.value = current.emails.join(", ");
+    input.oninput = () => {
+      current.emails = input.value
+        .split(/[,;]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      saveCatalog();
+      schedulePreview();
+    };
+    companyFields.append(field("Email получателей через запятую", input));
     notes.textContent = `${current.name}. ${current.notes || "Особых инструкций в исходной базе нет."}`;
     interaction.value = interactions.get(current.id) || "";
   }
@@ -515,7 +505,7 @@ async function mountPanel(onClose: () => void) {
       ? `Отправить ${selected.size} писем`
       : `Подготовить ${selected.size} черновиков`;
     deliveryNote.textContent = autoSend
-      ? "Кнопка «Отправить» запускает рассылку всем выбранным компаниям в этой вкладке. После подтверждения отправки открывается следующий редактор. Отправляется текст из предпросмотра, без добавления файлов и подписи документа. Если они нужны, выберите «Только черновики». Пропуски дополнительных реквизитов не останавливают отправку."
+      ? "Кнопка «Отправить» запускает рассылку всем выбранным компаниям в этой вкладке. После подтверждения отправки открывается следующий редактор. Отправляется текст из предпросмотра, без добавления файлов и подписи документа. Если они нужны, выберите «Только черновики»."
       : "Скрипт заполнит один черновик в этой вкладке и приостановит очередь. Добавьте нужные вложения и подпись. Отправьте письмо или закройте редактор с сохранением черновика, затем нажмите «Продолжить очередь» для следующей компании.";
     launch.disabled = !!queue?.running || selected.size === 0;
     try {

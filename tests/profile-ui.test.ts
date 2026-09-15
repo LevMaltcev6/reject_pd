@@ -366,10 +366,10 @@ test("automatic job expiry clears temporary work while preserving saved profile 
   const companyCard = [...root.querySelectorAll("details")].find(
     (details) =>
       details.querySelector("summary")?.textContent ===
-      "Реквизиты и примечания компании",
+      "Адреса и примечания компании",
   )!;
   const companyName = companyCard.querySelector("input")!;
-  companyName.value = "ООО Сохранённый каталог";
+  companyName.value = "saved-catalog@example.org";
   companyName.dispatchEvent(new first.w.Event("input", { bubbles: true }));
   const savedProfile = structuredClone(values.get(PROFILE_KEY));
   const catalogKey = "return-pd:catalog-v1";
