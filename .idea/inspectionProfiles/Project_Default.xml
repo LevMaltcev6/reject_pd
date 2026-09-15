@@ -1,0 +1,103 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="Eslint" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="aiogram" />
+          <option value="celery" />
+          <option value="redis" />
+          <option value="python-dotenv" />
+          <option value="dj-database-url" />
+          <option value="psycopg" />
+          <option value="aiofiles" />
+          <option value="aiohappyeyeballs" />
+          <option value="aiohttp" />
+          <option value="aiosignal" />
+          <option value="annotated-types" />
+          <option value="attrs" />
+          <option value="certifi" />
+          <option value="frozenlist" />
+          <option value="magic-filter" />
+          <option value="multidict" />
+          <option value="propcache" />
+          <option value="pydantic" />
+          <option value="pydantic_core" />
+          <option value="typing-inspection" />
+          <option value="yarl" />
+          <option value="Telethon" />
+          <option value="django-nested-admin" />
+          <option value="Pillow" />
+          <option value="amqp" />
+          <option value="anyio" />
+          <option value="asgiref" />
+          <option value="billiard" />
+          <option value="black" />
+          <option value="cfgv" />
+          <option value="click" />
+          <option value="click-didyoumean" />
+          <option value="click-plugins" />
+          <option value="click-repl" />
+          <option value="distlib" />
+          <option value="Django" />
+          <option value="django-cors-headers" />
+          <option value="django-extensions" />
+          <option value="djangorestframework" />
+          <option value="filelock" />
+          <option value="flake8" />
+          <option value="gunicorn" />
+          <option value="h11" />
+          <option value="httpcore" />
+          <option value="httpx" />
+          <option value="identify" />
+          <option value="idna" />
+          <option value="iniconfig" />
+          <option value="isort" />
+          <option value="kombu" />
+          <option value="mccabe" />
+          <option value="mypy" />
+          <option value="mypy_extensions" />
+          <option value="nodeenv" />
+          <option value="packaging" />
+          <option value="pathspec" />
+          <option value="platformdirs" />
+          <option value="pluggy" />
+          <option value="pre_commit" />
+          <option value="prompt_toolkit" />
+          <option value="psycopg2-binary" />
+          <option value="pycodestyle" />
+          <option value="pydantic-settings" />
+          <option value="pyflakes" />
+          <option value="Pygments" />
+          <option value="PyPDF2" />
+          <option value="pytest" />
+          <option value="pytest-asyncio" />
+          <option value="pytest-django" />
+          <option value="python-dateutil" />
+          <option value="python-telegram-bot" />
+          <option value="pytokens" />
+          <option value="PyYAML" />
+          <option value="six" />
+          <option value="sniffio" />
+          <option value="sqlparse" />
+          <option value="tenacity" />
+          <option value="typing_extensions" />
+          <option value="tzdata" />
+          <option value="vine" />
+          <option value="virtualenv" />
+          <option value="wcwidth" />
+          <option value="whitenoise" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredIdentifiers">
+        <list>
+          <option value="rate_limiting_service.amqp" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="Stylelint" enabled="true" level="ERROR" enabled_by_default="true" />
+  </profile>
+</component>

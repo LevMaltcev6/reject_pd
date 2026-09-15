@@ -1,0 +1,25 @@
+{
+  "name": "return-pd",
+  "version": "0.2.6",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "convert": "python3 scripts/convert_sources.py",
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "pretest": "npm run build",
+    "test": "tsx --test tests/*.test.ts",
+    "check": "npm run typecheck && npm test",
+    "preview": "node scripts/preview.mjs",
+    "format": "prettier --write src tests scripts/*.mjs package.json tsconfig.json README.md"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^22.13.0",
+    "esbuild": "^0.25.0",
+    "jsdom": "^26.0.0",
+    "prettier": "^3.9.6",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0"
+  }
+}
