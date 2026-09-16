@@ -88,7 +88,7 @@ test("missing optional values are reported without empty placeholders", () => {
   const l = makeLetter(data.companies[0], p, "inquiry", data.templates.inquiry);
   assert.equal(l.missing.length, 1);
   assert.doesNotMatch(l.body, /Паспорт:|Телефон:|\[|\{\{/);
-  assert.ok(l.actions.some((a) => a.includes("не подписан")));
+  assert.deepEqual(l.actions, []);
 });
 test("inquiry adds company-specific context and never withdrawal instructions", () => {
   const c = data.companies.find((c) => c.special === "pdf")!;
@@ -184,7 +184,7 @@ test("queue handles 50 companies serially, without repeating completed letters",
   await q.run(true);
   assert.equal(max, 1);
   assert.equal(calls, 50);
-  assert.ok(q.items.every((i) => i.status === "manual"));
+  assert.ok(q.items.every((i) => i.status === "filled"));
 });
 test("stop leaves unopened entries queued; explicit resume proceeds", async () => {
   let calls = 0;
@@ -222,7 +222,7 @@ test("uncertain draft pauses queue and is never retried automatically", async ()
   await q.run(true);
   assert.equal(calls, 2);
   assert.equal(q.items[0].status, "error");
-  assert.equal(q.items[1].status, "manual");
+  assert.equal(q.items[1].status, "filled");
 });
 test("pre-open failure can be retried without repeating completed entries", async () => {
   let calls = 0;
@@ -238,7 +238,7 @@ test("pre-open failure can be retried without repeating completed entries", asyn
   await q.run();
   await q.run(true);
   assert.equal(calls, 3);
-  assert.ok(q.items.every((i) => i.status === "manual"));
+  assert.ok(q.items.every((i) => i.status === "filled"));
 });
 test("TTL removes expired or invalid jobs, preserves settings and active work", () => {
   const map = new Map<string, unknown>([

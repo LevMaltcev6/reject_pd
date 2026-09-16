@@ -357,8 +357,7 @@ test("draft mode prepares one draft and pauses until the user closes it and cont
   await until(
     () =>
       results(root).some(
-        (row) =>
-          row.querySelector(".badge")?.textContent === "Требуется доработка",
+        (row) => row.querySelector(".badge")?.textContent === "Поля заполнены",
       ),
     "the first draft must finish filling and pause the queue",
   );
@@ -383,8 +382,7 @@ test("draft mode prepares one draft and pauses until the user closes it and cont
   await until(
     () =>
       results(root).filter(
-        (row) =>
-          row.querySelector(".badge")?.textContent === "Требуется доработка",
+        (row) => row.querySelector(".badge")?.textContent === "Поля заполнены",
       ).length === 2,
     "explicit Continue must prepare the remaining company",
   );

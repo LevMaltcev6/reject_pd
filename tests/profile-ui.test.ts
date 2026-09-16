@@ -221,91 +221,116 @@ test("built UI persists partial edits and explicit deletions without requiring a
   assertPersonal(await reloaded.open(), { fio: "Ива", email: "" });
 });
 
-test("updated company requisites replace stale saved details while custom recipients survive editing and reload", async (t) => {
+test("company recipients and requisites come from the catalog despite stale saved overrides", async (t) => {
   const catalogKey = "return-pd:catalog-v1";
   const companyId = "5a282799e3e5";
   const customEmail = "saved-recipient@example.invalid";
-  const editedEmail = "edited-recipient@example.invalid";
+  const savedCatalog = {
+    [companyId]: {
+      legalName: "STALE_LEGAL_NAME",
+      inn: "",
+      ogrn: "1111111111111",
+      emails: [customEmail],
+    },
+  };
   const values = new Map<string, unknown>([
     [PROFILE_KEY, personal],
-    [
-      catalogKey,
-      {
-        [companyId]: {
-          legalName: "STALE_LEGAL_NAME",
-          inn: "",
-          ogrn: "1111111111111",
-          emails: [customEmail],
-        },
-      },
-    ],
+    [catalogKey, savedCatalog],
   ]);
-  const recipientInput = (root: ShadowRoot) => {
+  const companyCard = (root: ShadowRoot) => {
     const card = [...root.querySelectorAll("details")].find(
       (details) =>
-        details.querySelector("summary")?.textContent ===
-        "Адреса и примечания компании",
+        details.querySelector("summary")?.textContent === "Примечания компании",
     );
-    assert.ok(card, "company recipient editor must remain available");
-    const input = card.querySelector("input");
-    assert.ok(input);
-    return input;
+    assert.ok(card, "company notes must remain available when relevant");
+    assert.equal(
+      card.querySelector("input"),
+      null,
+      "recipient editing is removed",
+    );
+    return card;
   };
-  const assertFreshRequisites = (root: ShadowRoot, recipient: string) => {
+  const assertFreshCatalog = (root: ShadowRoot) => {
     const body = root.querySelector("pre")?.textContent || "";
     assert.match(body, /ПАО «МТС»/);
     assert.match(body, /ИНН организации: 7740000076/);
     assert.match(body, /ОГРН организации: 1027700149124/);
     assert.doesNotMatch(body, /STALE_LEGAL_NAME|1111111111111/);
-    assert.equal(recipientInput(root).value, recipient);
     assert.equal(
       root.querySelector(".preview-title")?.nextElementSibling?.textContent,
-      `Кому: ${recipient}`,
+      "Кому: privacy@mts.ru",
+    );
+    assert.equal(
+      companyCard(root).hidden,
+      true,
+      "empty company notes are hidden",
+    );
+    assert.equal(
+      companyCard(root).querySelector<HTMLElement>(".note")!.hidden,
+      true,
     );
     const fieldLabels = [...root.querySelectorAll("label")]
       .map((label) => label.firstChild?.textContent || "")
       .join("\n");
     assert.doesNotMatch(
       fieldLabels,
-      /Юридическое наименование|ИНН организации|ОГРН организации/,
-      "imported company requisites must not reintroduce removed form fields",
+      /Email получателей|Юридическое наименование|ИНН организации|ОГРН организации/,
+      "company addresses and requisites must not reintroduce removed form fields",
+    );
+    assert.ok(!(root.textContent || "").includes(customEmail));
+    assert.ok(
+      !(root.textContent || "").includes(
+        "Особых инструкций в исходной базе нет.",
+      ),
     );
   };
 
   const first = page(values);
   t.after(() => first.close());
   const root = await first.open();
-  assertFreshRequisites(root, customEmail);
-
-  const input = recipientInput(root);
-  input.value = editedEmail;
-  input.dispatchEvent(new first.w.Event("input", { bubbles: true }));
-  await until(
-    () =>
-      root.querySelector(".preview-title")?.nextElementSibling?.textContent ===
-      `Кому: ${editedEmail}`,
-    "recipient changes must reach the letter preview",
+  assertFreshCatalog(root);
+  const card = companyCard(root);
+  const mode = root.querySelector<HTMLOptionElement>('option[value="inquiry"]')!
+    .parentElement as HTMLSelectElement;
+  mode.value = "inquiry";
+  mode.dispatchEvent(new first.w.Event("change", { bubbles: true }));
+  assert.equal(
+    card.hidden,
+    false,
+    "inquiry keeps the interaction field available",
   );
-  const saved = values.get(catalogKey) as Record<
-    string,
-    Record<string, unknown>
-  >;
-  assert.deepEqual(saved[companyId].emails, [editedEmail]);
-  for (const entry of Object.values(saved)) {
-    for (const key of ["legalName", "inn", "ogrn"]) {
-      assert.equal(
-        Object.hasOwn(entry, key),
-        false,
-        `${key} must not be persisted alongside recipient overrides`,
-      );
-    }
-  }
-  assertFreshRequisites(root, editedEmail);
+  assert.equal(card.querySelector<HTMLElement>(".note")!.hidden, true);
+  assert.equal(card.querySelector("textarea")!.parentElement!.hidden, false);
+  mode.value = "withdrawal";
+  mode.dispatchEvent(new first.w.Event("change", { bubbles: true }));
+  assert.equal(card.hidden, true);
+  control(root, "Сбер Мобайл").click();
+  assert.equal(
+    card.hidden,
+    false,
+    "companies with instructions show their notes",
+  );
+  assert.equal(card.querySelector<HTMLElement>(".note")!.hidden, false);
+  assert.match(
+    card.querySelector(".note")!.textContent || "",
+    /К письму приложить PDF/,
+  );
+  control(root, "МТС").click();
+  assertFreshCatalog(root);
+  assert.equal(
+    first.writes.some(({ key }) => key === catalogKey),
+    false,
+  );
+  assert.deepEqual(values.get(catalogKey), savedCatalog);
   first.close();
 
   const reloaded = page(values);
   t.after(() => reloaded.close());
-  assertFreshRequisites(await reloaded.open(), editedEmail);
+  assertFreshCatalog(await reloaded.open());
+  assert.equal(
+    reloaded.writes.some(({ key }) => key === catalogKey),
+    false,
+  );
 });
 
 test("persistent profile excludes date, selected companies, templates and letter session data", async (t) => {
@@ -442,24 +467,21 @@ test("storage failures show a static status while preserving field node, edit, f
   assert.equal(input.selectionEnd, 6);
 });
 
-test("automatic job expiry clears temporary work while preserving saved profile and catalog", async (t) => {
-  const values = new Map<string, unknown>();
+test("automatic job expiry clears temporary work while preserving saved profile and legacy catalog storage", async (t) => {
+  const catalogKey = "return-pd:catalog-v1";
+  const values = new Map<string, unknown>([
+    [
+      catalogKey,
+      { "5a282799e3e5": { emails: ["legacy-recipient@example.org"] } },
+    ],
+  ]);
   const firstTime = new Date(2030, 0, 2, 12).getTime();
   const first = page(values, { now: firstTime, manualIntervals: true });
   t.after(() => first.close());
   const root = await first.open();
   first.input(root, "fio", personal.fio);
   first.input(root, "email", personal.email);
-  const companyCard = [...root.querySelectorAll("details")].find(
-    (details) =>
-      details.querySelector("summary")?.textContent ===
-      "Адреса и примечания компании",
-  )!;
-  const companyName = companyCard.querySelector("input")!;
-  companyName.value = "saved-catalog@example.org";
-  companyName.dispatchEvent(new first.w.Event("input", { bubbles: true }));
   const savedProfile = structuredClone(values.get(PROFILE_KEY));
-  const catalogKey = "return-pd:catalog-v1";
   const savedCatalog = structuredClone(values.get(catalogKey));
   assert.ok(savedProfile);
   assert.ok(savedCatalog);

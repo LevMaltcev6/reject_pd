@@ -24,7 +24,7 @@ test("launcher and menu exist before frame creation; failed frame does not remov
   await new Promise((resolve) => setTimeout(resolve, 10));
   assert.equal(document.querySelector("iframe"), null);
   assert.equal(root.querySelector("p")!.hidden, false);
-  assert.equal(button.textContent, "↗ Обращения по ПД · 0.2.10");
+  assert.equal(button.textContent, "↗ Обращения по ПД · 0.2.12");
   assert.notEqual(host.style.display, "none");
   assert.equal(button.disabled, false);
   ui.dispose();

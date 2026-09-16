@@ -184,16 +184,6 @@ async function mountPanel(onClose: () => void) {
   search.setAttribute("aria-label", "Найти компанию");
   left.append(search);
   const companies: Company[] = structuredClone(data.companies);
-  const saved = store.get<Record<string, Partial<Company>>>(SETTINGS) || {};
-  for (const c of companies)
-    if (saved[c.id]) {
-      const s = saved[c.id];
-      if (
-        Array.isArray(s.emails) &&
-        s.emails.every((e) => typeof e === "string")
-      )
-        c.emails = s.emails;
-    }
   const selected = new Set<string>();
   const toolbar = el("div", undefined, "toolbar");
   toolbar.append(
@@ -217,10 +207,8 @@ async function mountPanel(onClose: () => void) {
   left.append(companyList);
   let current = companies[0];
   const card = el("details");
-  card.append(el("summary", "Адреса и примечания компании"));
+  card.append(el("summary", "Примечания компании"));
   left.append(card);
-  const companyFields = el("div", undefined, "fields");
-  card.append(companyFields);
   const notes = el("p", "", "note");
   card.append(notes);
   const interactions = new Map<string, string>();
@@ -427,33 +415,18 @@ async function mountPanel(onClose: () => void) {
       interactions.get(c.id),
     );
   }
-  function saveCatalog() {
-    const value: Record<string, Partial<Company>> = {};
-    for (const c of companies)
-      value[c.id] = {
-        emails: c.emails,
-      };
-    store.set(SETTINGS, value);
-  }
   function loadTemplate() {
     subject.value = templates[mode].subject;
     body.value = templates[mode].body;
     interactionWrap.hidden = mode !== "inquiry";
+    card.hidden = !current.notes && mode !== "inquiry";
   }
   function renderCard() {
-    companyFields.replaceChildren();
-    const input = el("input");
-    input.value = current.emails.join(", ");
-    input.oninput = () => {
-      current.emails = input.value
-        .split(/[,;]/)
-        .map((s) => s.trim())
-        .filter(Boolean);
-      saveCatalog();
-      schedulePreview();
-    };
-    companyFields.append(field("Email получателей через запятую", input));
-    notes.textContent = `${current.name}. ${current.notes || "Особых инструкций в исходной базе нет."}`;
+    card.hidden = !current.notes && mode !== "inquiry";
+    notes.hidden = !current.notes;
+    notes.textContent = current.notes
+      ? `${current.name}. ${current.notes}`
+      : "";
     interaction.value = interactions.get(current.id) || "";
   }
   function renderCompanies() {
@@ -500,8 +473,8 @@ async function mountPanel(onClose: () => void) {
       ? `Отправить ${selected.size} писем`
       : `Подготовить ${selected.size} черновиков`;
     deliveryNote.textContent = autoSend
-      ? "Кнопка «Отправить» запускает рассылку всем выбранным компаниям в этой вкладке. После подтверждения отправки открывается следующий редактор. Отправляется текст из предпросмотра, без добавления файлов и подписи документа. Если они нужны, выберите «Только черновики»."
-      : "Скрипт заполнит один черновик в этой вкладке и приостановит очередь. Добавьте нужные вложения и подпись. Отправьте письмо или закройте редактор с сохранением черновика, затем нажмите «Продолжить очередь» для следующей компании.";
+      ? "Кнопка «Отправить» запускает рассылку всем выбранным компаниям в этой вкладке. После подтверждения отправки открывается следующий редактор. Отправляется текст из предпросмотра. Для ручного редактирования выберите «Только черновики»."
+      : "Скрипт заполнит один черновик в этой вкладке и приостановит очередь. Вы можете отредактировать письмо. Отправьте его или закройте редактор с сохранением черновика, затем нажмите «Продолжить очередь» для следующей компании.";
     launch.disabled = !!queue?.running || selected.size === 0;
     try {
       const l = letter(current);
@@ -772,7 +745,7 @@ async function mountPanel(onClose: () => void) {
     resultRows.clear();
     progress.textContent = clearSaved
       ? "Данные скрипта очищены. Черновики в почте не удалены."
-      : "Временные тексты и результаты очищены через 24 часа. Сохранённые данные формы и каталог остались в браузере.";
+      : "Временные тексты и результаты очищены через 24 часа. Сохранённые данные формы остались в браузере.";
     loadTemplate();
     renderCard();
     renderCompanies();

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Возврат ПД — подготовка обращений
 // @namespace    return-pd.local
-// @version      0.2.12
+// @version      0.2.11
 // @description  Рассылка по вашим шаблонам в текущей вкладке почты. Доступен режим черновиков.
 // @match        https://mail.google.com/*
 // @match        https://mail.yandex.ru/*
@@ -169,7 +169,7 @@
   }
   function yandexDiagnostics(doc) {
     return {
-      version: "0.2.12",
+      version: "0.2.11",
       controls: [...doc.querySelectorAll(controls)].map((el2) => ({
         tag: el2.tagName,
         active: active(el2, doc),
@@ -1961,7 +1961,7 @@ ${values["\u0424\u0418\u041E"]}`
     style.textContent = "button{font:14px system-ui;cursor:pointer;background:#204c3c;color:white;border:1px solid #93b6a3;border-radius:9px;padding:12px 16px;box-shadow:0 4px 20px #0003}button:focus-visible{outline:3px solid #9bd6b9}p{font:13px/1.5 system-ui;max-width:320px;padding:12px;background:white;color:#8d2929;border:1px solid #d6b3b3;border-radius:8px}[hidden]{display:none!important}";
     const trigger = doc.createElement("button");
     trigger.type = "button";
-    const label = "\u2197 \u041E\u0431\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u043F\u043E \u041F\u0414 \xB7 0.2.12";
+    const label = "\u2197 \u041E\u0431\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u043F\u043E \u041F\u0414 \xB7 0.2.11";
     trigger.textContent = label;
     const failure = doc.createElement("p");
     failure.hidden = true;
@@ -2030,7 +2030,7 @@ ${values["\u0424\u0418\u041E"]}`
     trigger.onclick = () => void open();
     try {
       GM_registerMenuCommand(
-        "\u041E\u0431\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u043F\u043E \u041F\u0414 \xB7 0.2.12 \u2014 \u043E\u0442\u043A\u0440\u044B\u0442\u044C",
+        "\u041E\u0431\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u043F\u043E \u041F\u0414 \xB7 0.2.11 \u2014 \u043E\u0442\u043A\u0440\u044B\u0442\u044C",
         () => void open()
       );
     } catch {
@@ -2245,6 +2245,13 @@ ${values["\u0424\u0418\u041E"]}`
     search.setAttribute("aria-label", "\u041D\u0430\u0439\u0442\u0438 \u043A\u043E\u043C\u043F\u0430\u043D\u0438\u044E");
     left.append(search);
     const companies = structuredClone(data_default.companies);
+    const saved = store.get(SETTINGS) || {};
+    for (const c of companies)
+      if (saved[c.id]) {
+        const s = saved[c.id];
+        if (Array.isArray(s.emails) && s.emails.every((e) => typeof e === "string"))
+          c.emails = s.emails;
+      }
     const selected = /* @__PURE__ */ new Set();
     const toolbar = el("div", void 0, "toolbar");
     toolbar.append(
@@ -2268,8 +2275,10 @@ ${values["\u0424\u0418\u041E"]}`
     left.append(companyList);
     let current = companies[0];
     const card = el("details");
-    card.append(el("summary", "\u041F\u0440\u0438\u043C\u0435\u0447\u0430\u043D\u0438\u044F \u043A\u043E\u043C\u043F\u0430\u043D\u0438\u0438"));
+    card.append(el("summary", "\u0410\u0434\u0440\u0435\u0441\u0430 \u0438 \u043F\u0440\u0438\u043C\u0435\u0447\u0430\u043D\u0438\u044F \u043A\u043E\u043C\u043F\u0430\u043D\u0438\u0438"));
     left.append(card);
+    const companyFields = el("div", void 0, "fields");
+    card.append(companyFields);
     const notes = el("p", "", "note");
     card.append(notes);
     const interactions = /* @__PURE__ */ new Map();
@@ -2430,12 +2439,12 @@ ${values["\u0424\u0418\u041E"]}`
     }
     function restoreProfile() {
       try {
-        const saved = readProfile(store);
+        const saved2 = readProfile(store);
         for (const [key, input] of inputs) {
-          if (isSavedProfileField(key)) input.value = saved[key] || "";
+          if (isSavedProfileField(key)) input.value = saved2[key] || "";
         }
         profileStatus.className = "muted";
-        profileStatus.textContent = Object.keys(saved).length ? "\u0421\u043E\u0445\u0440\u0430\u043D\u0451\u043D\u043D\u044B\u0435 \u0434\u0430\u043D\u043D\u044B\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D\u044B. \u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u044E\u0442\u0441\u044F \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438." : "\u0414\u0430\u043D\u043D\u044B\u0435 \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u044E\u0442\u0441\u044F \u0432 \u044D\u0442\u043E\u043C \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435 \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438.";
+        profileStatus.textContent = Object.keys(saved2).length ? "\u0421\u043E\u0445\u0440\u0430\u043D\u0451\u043D\u043D\u044B\u0435 \u0434\u0430\u043D\u043D\u044B\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043D\u044B. \u0418\u0437\u043C\u0435\u043D\u0435\u043D\u0438\u044F \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u044E\u0442\u0441\u044F \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438." : "\u0414\u0430\u043D\u043D\u044B\u0435 \u0441\u043E\u0445\u0440\u0430\u043D\u044F\u044E\u0442\u0441\u044F \u0432 \u044D\u0442\u043E\u043C \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435 \u0430\u0432\u0442\u043E\u043C\u0430\u0442\u0438\u0447\u0435\u0441\u043A\u0438.";
       } catch {
         profileStatus.className = "error";
         profileStatus.textContent = "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0441\u043E\u0445\u0440\u0430\u043D\u0451\u043D\u043D\u044B\u0435 \u0434\u0430\u043D\u043D\u044B\u0435 \u0438\u0437 Tampermonkey. \u0412\u0432\u0435\u0434\u0451\u043D\u043D\u044B\u0435 \u043F\u043E\u043B\u044F \u043E\u0441\u0442\u0430\u044E\u0442\u0441\u044F \u0434\u043E\u0441\u0442\u0443\u043F\u043D\u044B \u0432 \u044D\u0442\u043E\u0439 \u0432\u043A\u043B\u0430\u0434\u043A\u0435.";
@@ -2461,16 +2470,30 @@ ${values["\u0424\u0418\u041E"]}`
         interactions.get(c.id)
       );
     }
+    function saveCatalog() {
+      const value = {};
+      for (const c of companies)
+        value[c.id] = {
+          emails: c.emails
+        };
+      store.set(SETTINGS, value);
+    }
     function loadTemplate() {
       subject.value = templates[mode].subject;
       body.value = templates[mode].body;
       interactionWrap.hidden = mode !== "inquiry";
-      card.hidden = !current.notes && mode !== "inquiry";
     }
     function renderCard() {
-      card.hidden = !current.notes && mode !== "inquiry";
-      notes.hidden = !current.notes;
-      notes.textContent = current.notes ? `${current.name}. ${current.notes}` : "";
+      companyFields.replaceChildren();
+      const input = el("input");
+      input.value = current.emails.join(", ");
+      input.oninput = () => {
+        current.emails = input.value.split(/[,;]/).map((s) => s.trim()).filter(Boolean);
+        saveCatalog();
+        schedulePreview();
+      };
+      companyFields.append(field("Email \u043F\u043E\u043B\u0443\u0447\u0430\u0442\u0435\u043B\u0435\u0439 \u0447\u0435\u0440\u0435\u0437 \u0437\u0430\u043F\u044F\u0442\u0443\u044E", input));
+      notes.textContent = `${current.name}. ${current.notes || "\u041E\u0441\u043E\u0431\u044B\u0445 \u0438\u043D\u0441\u0442\u0440\u0443\u043A\u0446\u0438\u0439 \u0432 \u0438\u0441\u0445\u043E\u0434\u043D\u043E\u0439 \u0431\u0430\u0437\u0435 \u043D\u0435\u0442."}`;
       interaction.value = interactions.get(current.id) || "";
     }
     function renderCompanies() {
@@ -2745,7 +2768,7 @@ ${values["\u0424\u0418\u041E"]}`
       previewSelect.value = current.id;
       statusList.replaceChildren();
       resultRows.clear();
-      progress.textContent = clearSaved ? "\u0414\u0430\u043D\u043D\u044B\u0435 \u0441\u043A\u0440\u0438\u043F\u0442\u0430 \u043E\u0447\u0438\u0449\u0435\u043D\u044B. \u0427\u0435\u0440\u043D\u043E\u0432\u0438\u043A\u0438 \u0432 \u043F\u043E\u0447\u0442\u0435 \u043D\u0435 \u0443\u0434\u0430\u043B\u0435\u043D\u044B." : "\u0412\u0440\u0435\u043C\u0435\u043D\u043D\u044B\u0435 \u0442\u0435\u043A\u0441\u0442\u044B \u0438 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u044B \u043E\u0447\u0438\u0449\u0435\u043D\u044B \u0447\u0435\u0440\u0435\u0437 24 \u0447\u0430\u0441\u0430. \u0421\u043E\u0445\u0440\u0430\u043D\u0451\u043D\u043D\u044B\u0435 \u0434\u0430\u043D\u043D\u044B\u0435 \u0444\u043E\u0440\u043C\u044B \u043E\u0441\u0442\u0430\u043B\u0438\u0441\u044C \u0432 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435.";
+      progress.textContent = clearSaved ? "\u0414\u0430\u043D\u043D\u044B\u0435 \u0441\u043A\u0440\u0438\u043F\u0442\u0430 \u043E\u0447\u0438\u0449\u0435\u043D\u044B. \u0427\u0435\u0440\u043D\u043E\u0432\u0438\u043A\u0438 \u0432 \u043F\u043E\u0447\u0442\u0435 \u043D\u0435 \u0443\u0434\u0430\u043B\u0435\u043D\u044B." : "\u0412\u0440\u0435\u043C\u0435\u043D\u043D\u044B\u0435 \u0442\u0435\u043A\u0441\u0442\u044B \u0438 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442\u044B \u043E\u0447\u0438\u0449\u0435\u043D\u044B \u0447\u0435\u0440\u0435\u0437 24 \u0447\u0430\u0441\u0430. \u0421\u043E\u0445\u0440\u0430\u043D\u0451\u043D\u043D\u044B\u0435 \u0434\u0430\u043D\u043D\u044B\u0435 \u0444\u043E\u0440\u043C\u044B \u0438 \u043A\u0430\u0442\u0430\u043B\u043E\u0433 \u043E\u0441\u0442\u0430\u043B\u0438\u0441\u044C \u0432 \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435.";
       loadTemplate();
       renderCard();
       renderCompanies();
