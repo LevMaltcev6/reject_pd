@@ -70,9 +70,6 @@ function fixture(
     get appData() {
       return appData;
     },
-    changeStored(html: string) {
-      editorData = html;
-    },
     close() {
       w.close();
     },
@@ -113,7 +110,7 @@ test("controlled CKEditor fixture reproduces visible full text but an empty appl
   assert.equal(f.changes, 0);
 });
 
-test("CKEditor write waits for dataReady, notifies the application and verifies serialized text", async (t) => {
+test("CKEditor write waits for dataReady and notifies the application with escaped template text", async (t) => {
   const f = fixture();
   t.after(() => f.close());
   const result = await writeMailBody(
@@ -140,62 +137,54 @@ test("CKEditor write waits for dataReady, notifies the application and verifies 
     /Тест Проверки Скрипта/,
     "ordinary word spaces must stay breakable so the letter wraps",
   );
-  result.verify();
+  assert.equal(result, undefined);
 });
 
-for (const failure of ["data", "dom"] as const) {
-  test(`CKEditor rejects ${failure} truncation even when the other representation contains the whole letter`, async (t) => {
+for (const transformed of ["data", "dom"] as const) {
+  test(`CKEditor ${transformed} transformations do not block a completed write`, async (t) => {
     const f = fixture(
-      failure === "data"
-        ? { dataTransform: () => "<p></p>" }
-        : { domTransform: () => "<p></p>" },
+      transformed === "data"
+        ? { dataTransform: () => "<p>Текст изменён редактором</p>" }
+        : { domTransform: () => "<p>Текст изменён редактором</p>" },
     );
     t.after(() => f.close());
-    await assert.rejects(
-      writeMailBody(f.body, expected, new AbortController().signal),
-      code("mismatch"),
+    await writeMailBody(f.body, expected, new AbortController().signal);
+    assert.equal(f.changes, 1);
+    assert.match(
+      transformed === "data" ? f.appData : f.body.innerHTML,
+      /Текст изменён редактором/,
     );
   });
 }
 
-for (const changed of ["serialized", "visible"] as const) {
-  test(`the retained checkpoint rejects later changes to the ${changed} body before sending`, async (t) => {
-    const f = fixture();
-    t.after(() => f.close());
-    const result = await writeMailBody(
-      f.body,
-      expected,
-      new AbortController().signal,
-    );
-    if (changed === "serialized") f.changeStored("<p>Другой текст</p>");
-    else f.body.textContent = "Другой текст";
-    assert.throws(() => result.verify(), code("mismatch"));
-  });
-}
+test("CKEditor writes without reading serialized content back from its API", async (t) => {
+  const f = fixture();
+  t.after(() => f.close());
+  Reflect.deleteProperty(f.instance, "getData");
+  await writeMailBody(f.body, expected, new AbortController().signal);
+  assert.deepEqual(f.events, ["setData", "dataReady", "change"]);
+  assert.match(f.appData, /отзываю согласие/);
+});
 
-test("CKEditor serialization may use paragraphs, br and formatting whitespace without losing text boundaries", async (t) => {
+test("CKEditor may normalize paragraphs, br and whitespace while committing template text", async (t) => {
   const format = () =>
     "<p>Первая строка</p>\n<p>Вторая строка<br />\nТретья строка</p>\n";
   const f = fixture({ dataTransform: format, domTransform: format });
   t.after(() => f.close());
-  const checkpoint = await writeMailBody(
+  await writeMailBody(
     f.body,
     "Первая строка\n\nВторая строка\nТретья строка",
     new AbortController().signal,
   );
-  checkpoint.verify();
+  assert.equal(f.appData, format());
+  assert.equal(f.changes, 1);
 });
 
 test("long Cyrillic text, HTML-sensitive characters, indentation and multiple blank lines survive the editor serializer", async (t) => {
   const f = fixture();
   t.after(() => f.close());
   const text = `  Начало <&> "кавычки"\n\n\n${"Длинный абзац с кириллицей и emoji ✅. ".repeat(300)}\n    Последняя строка`;
-  const checkpoint = await writeMailBody(
-    f.body,
-    text,
-    new AbortController().signal,
-  );
-  checkpoint.verify();
+  await writeMailBody(f.body, text, new AbortController().signal);
   const snapshot = serializedText(f.appData);
   assert.equal(snapshot.value, text.replace(/\n/g, ""));
   assert.equal(snapshot.breaks, 4);
@@ -278,6 +267,17 @@ test("cancelling before dataReady never sends a change notification with stale o
   assert.equal(f.appData, "");
 });
 
+test("cancellation during the editor change notification still stops body preparation", async (t) => {
+  const f = fixture();
+  t.after(() => f.close());
+  const abort = new AbortController();
+  f.instance.fire = () => abort.abort();
+  await assert.rejects(
+    writeMailBody(f.body, expected, abort.signal),
+    code("cancelled"),
+  );
+});
+
 test("a missing setData callback is not considered a completed write", async (t) => {
   const f = fixture({ neverReady: true });
   t.after(() => f.close());
@@ -345,32 +345,53 @@ test("generic editor uses the selected native editing transaction and its model 
     );
     return true;
   };
-  const checkpoint = await writeMailBody(
+  const result = await writeMailBody(
     body,
     expected,
     new AbortController().signal,
   );
   assert.equal(calls, 1);
   assert.equal(model, expected);
-  checkpoint.verify();
+  assert.equal(result, undefined);
 });
 
-for (const outcome of ["missing", "false", "no-change"] as const) {
+for (const outcome of ["missing", "false"] as const) {
   test(`generic editor ${outcome} native insertion never silently falls back to direct DOM replacement`, async (t) => {
     const { dom, body } = gmail();
     t.after(() => dom.window.close());
-    if (outcome !== "missing")
-      dom.window.document.execCommand = () => outcome === "no-change";
+    if (outcome !== "missing") dom.window.document.execCommand = () => false;
     await assert.rejects(
       writeMailBody(body, expected, new AbortController().signal),
-      code(
-        outcome === "missing"
-          ? "unavailable"
-          : outcome === "false"
-            ? "write_failed"
-            : "mismatch",
-      ),
+      code(outcome === "missing" ? "unavailable" : "write_failed"),
     );
     assert.equal(body.textContent, "");
   });
 }
+
+test("successful native editing does not require an unchanged visible text roundtrip", async (t) => {
+  const { dom, body } = gmail();
+  t.after(() => dom.window.close());
+  let calls = 0;
+  dom.window.document.execCommand = () => {
+    calls++;
+    body.textContent = "Текст изменён редактором";
+    return true;
+  };
+  await writeMailBody(body, expected, new AbortController().signal);
+  assert.equal(calls, 1);
+  assert.equal(body.textContent, "Текст изменён редактором");
+});
+
+test("cancellation during native editing still stops body preparation", async (t) => {
+  const { dom, body } = gmail();
+  t.after(() => dom.window.close());
+  const abort = new AbortController();
+  dom.window.document.execCommand = () => {
+    abort.abort();
+    return true;
+  };
+  await assert.rejects(
+    writeMailBody(body, expected, abort.signal),
+    code("cancelled"),
+  );
+});

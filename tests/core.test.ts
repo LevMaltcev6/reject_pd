@@ -31,18 +31,32 @@ const company: Company = {
 };
 const letter = () =>
   makeLetter(company, profile, "withdrawal", data.templates.withdrawal);
-test("source catalog has 27 companies, 29 distinct addresses and preserved statuses", () => {
-  assert.equal(data.companies.length, 27);
+test("source catalog has 50 companies, 53 distinct addresses and preserved statuses", () => {
+  assert.equal(data.companies.length, 50);
   const emails = data.companies.flatMap((c) => c.emails);
-  assert.equal(emails.length, 29);
-  assert.equal(new Set(emails.map((e) => e.toLowerCase())).size, 29);
-  assert.equal(data.companies.filter((c) => c.emails.length === 2).length, 2);
+  assert.equal(emails.length, 53);
+  assert.equal(new Set(emails.map((e) => e.toLowerCase())).size, 53);
+  assert.equal(data.companies.filter((c) => c.emails.length === 2).length, 3);
   assert.equal(
     data.companies.filter((c) => c.sourceStatus === "Ответ получен, ПД удалены")
       .length,
     22,
   );
   assert.equal(data.companies.filter((c) => c.special).length, 2);
+  for (const company of data.companies) {
+    assert.ok(company.legalName);
+    assert.match(company.inn, /^\d{10}$/);
+    assert.match(company.ogrn, /^\d{13}$/);
+  }
+  const mts = data.companies.find((c) => c.name === "МТС")!;
+  assert.equal(mts.id, "5a282799e3e5");
+  assert.equal(mts.legalName, "ПАО «МТС»");
+  assert.equal(mts.inn, "7740000076");
+  assert.equal(mts.ogrn, "1027700149124");
+  assert.equal(
+    data.companies.find((c) => c.legalName === "ПАО «БАНК УРАЛСИБ»")!.inn,
+    "0274062111",
+  );
 });
 test("both Word templates retain every numbered item and normalize placeholders", () => {
   assert.equal(data.templates.withdrawal.body.match(/^\d+\. /gm)?.length, 4);

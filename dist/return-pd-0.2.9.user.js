@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Возврат ПД — подготовка обращений
 // @namespace    return-pd.local
-// @version      0.2.10
+// @version      0.2.9
 // @description  Рассылка по вашим шаблонам в текущей вкладке почты. Доступен режим черновиков.
 // @match        https://mail.google.com/*
 // @match        https://mail.yandex.ru/*
@@ -169,7 +169,7 @@
   }
   function yandexDiagnostics(doc) {
     return {
-      version: "0.2.10",
+      version: "0.2.9",
       controls: [...doc.querySelectorAll(controls)].map((el2) => ({
         tag: el2.tagName,
         active: active(el2, doc),
@@ -196,11 +196,15 @@
     editor_root_missing: "\u041F\u043E\u043B\u0435 \u0442\u0435\u043A\u0441\u0442\u0430 \u043D\u0430\u0439\u0434\u0435\u043D\u043E, \u043D\u043E \u043D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043E\u043F\u0440\u0435\u0434\u0435\u043B\u0438\u0442\u044C \u0433\u0440\u0430\u043D\u0438\u0446\u044B \u0440\u0435\u0434\u0430\u043A\u0442\u043E\u0440\u0430 \u043F\u0438\u0441\u044C\u043C\u0430.",
     subject_missing: "\u041D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E \u0435\u0434\u0438\u043D\u0441\u0442\u0432\u0435\u043D\u043D\u043E\u0435 \u043F\u043E\u043B\u0435 \u0442\u0435\u043C\u044B \u043F\u0438\u0441\u044C\u043C\u0430.",
     recipients_missing: "\u041D\u0435 \u043D\u0430\u0439\u0434\u0435\u043D\u043E \u0435\u0434\u0438\u043D\u0441\u0442\u0432\u0435\u043D\u043D\u043E\u0435 \u043F\u043E\u043B\u0435 \xAB\u041A\u043E\u043C\u0443\xBB.",
+    recipient_unconfirmed: "\u0410\u0434\u0440\u0435\u0441 \u0432\u0432\u0435\u0434\u0451\u043D \u0432 \xAB\u041A\u043E\u043C\u0443\xBB, \u043D\u043E \u0441\u043A\u0440\u0438\u043F\u0442 \u043D\u0435 \u0441\u043C\u043E\u0433 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u044C \u0435\u0433\u043E \u0434\u043E\u0431\u0430\u0432\u043B\u0435\u043D\u0438\u0435 \u0432 \u0441\u043F\u0438\u0441\u043E\u043A \u043F\u043E\u043B\u0443\u0447\u0430\u0442\u0435\u043B\u0435\u0439.",
     existing_editor: "\u0412\u043E \u0432\u043A\u043B\u0430\u0434\u043A\u0435 \u0443\u0436\u0435 \u043E\u0442\u043A\u0440\u044B\u0442 \u0440\u0435\u0434\u0430\u043A\u0442\u043E\u0440. \u041E\u043D \u043D\u0435 \u0431\u0443\u0434\u0435\u0442 \u0438\u0437\u043C\u0435\u043D\u0451\u043D.",
     existing_recipients: "\u0412 \u043D\u043E\u0432\u043E\u043C \u0440\u0435\u0434\u0430\u043A\u0442\u043E\u0440\u0435 \u0443\u0436\u0435 \u0435\u0441\u0442\u044C \u043F\u043E\u043B\u0443\u0447\u0430\u0442\u0435\u043B\u0438. \u0421\u043A\u0440\u0438\u043F\u0442 \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u043B\u0441\u044F, \u0447\u0442\u043E\u0431\u044B \u043D\u0435 \u0438\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u0432\u0430\u0448\u0435 \u043F\u0438\u0441\u044C\u043C\u043E.",
     existing_subject: "\u0412 \u043D\u043E\u0432\u043E\u043C \u0440\u0435\u0434\u0430\u043A\u0442\u043E\u0440\u0435 \u0443\u0436\u0435 \u0437\u0430\u043F\u043E\u043B\u043D\u0435\u043D\u0430 \u0442\u0435\u043C\u0430. \u0421\u043A\u0440\u0438\u043F\u0442 \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u043B\u0441\u044F, \u0447\u0442\u043E\u0431\u044B \u043D\u0435 \u0438\u0437\u043C\u0435\u043D\u0438\u0442\u044C \u0432\u0430\u0448\u0435 \u043F\u0438\u0441\u044C\u043C\u043E.",
     existing_body: "\u0420\u0435\u0434\u0430\u043A\u0442\u043E\u0440 \u0443\u0436\u0435 \u0441\u043E\u0434\u0435\u0440\u0436\u0438\u0442 \u0442\u0435\u043A\u0441\u0442 \u0438\u043B\u0438 \u043D\u0435\u0440\u0430\u0441\u043F\u043E\u0437\u043D\u0430\u043D\u043D\u0443\u044E \u043F\u043E\u0434\u043F\u0438\u0441\u044C. \u0421\u043A\u0440\u0438\u043F\u0442 \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u043B\u0441\u044F, \u0447\u0442\u043E\u0431\u044B \u043D\u0435 \u0441\u0442\u0435\u0440\u0435\u0442\u044C \u0438\u0445.",
-    body_write_failed: "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0432\u0441\u0442\u0430\u0432\u0438\u0442\u044C \u0442\u0435\u043A\u0441\u0442 \u0432 \u0440\u0435\u0434\u0430\u043A\u0442\u043E\u0440 \u043F\u043E\u0447\u0442\u044B. \u041E\u0442\u043F\u0440\u0430\u0432\u043A\u0430 \u043D\u0435 \u0437\u0430\u043F\u0443\u0441\u043A\u0430\u043B\u0430\u0441\u044C. \u0422\u0435\u043A\u0441\u0442 \u043C\u043E\u0436\u043D\u043E \u0441\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0438\u0437 \u043F\u0430\u043D\u0435\u043B\u0438.",
+    recipients_mismatch: "\u041F\u043E\u0441\u043B\u0435 \u0437\u0430\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u044F \u0441\u043F\u0438\u0441\u043E\u043A \u043F\u043E\u043B\u0443\u0447\u0430\u0442\u0435\u043B\u0435\u0439 \u043D\u0435 \u0441\u043E\u0432\u043F\u0430\u043B \u0441 \u0437\u0430\u0434\u0430\u043D\u0438\u0435\u043C. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u043F\u043E\u043B\u0435 \xAB\u041A\u043E\u043C\u0443\xBB \u0432 \u043F\u0438\u0441\u044C\u043C\u0435.",
+    subject_mismatch: "\u041F\u043E\u0441\u043B\u0435 \u0437\u0430\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u044F \u0442\u0435\u043C\u0430 \u043D\u0435 \u0441\u043E\u0432\u043F\u0430\u043B\u0430 \u0441 \u0437\u0430\u0434\u0430\u043D\u0438\u0435\u043C. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u0442\u0435\u043C\u0443 \u043F\u0438\u0441\u044C\u043C\u0430.",
+    body_mismatch: "\u041F\u043E\u0441\u043B\u0435 \u0437\u0430\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u044F \u0442\u0435\u043A\u0441\u0442 \u0432 \u0440\u0435\u0434\u0430\u043A\u0442\u043E\u0440\u0435 \u043D\u0435 \u0441\u043E\u0432\u043F\u0430\u043B \u0441 \u0437\u0430\u0434\u0430\u043D\u0438\u0435\u043C. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u0442\u0435\u043A\u0441\u0442 \u043F\u0438\u0441\u044C\u043C\u0430.",
+    body_not_committed: "\u0420\u0435\u0434\u0430\u043A\u0442\u043E\u0440 \u043F\u043E\u0447\u0442\u044B \u043D\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u043B \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435 \u0442\u0435\u043A\u0441\u0442\u0430 \u043F\u0438\u0441\u044C\u043C\u0430. \u041E\u0442\u043F\u0440\u0430\u0432\u043A\u0430 \u043D\u0435 \u0437\u0430\u043F\u0443\u0441\u043A\u0430\u043B\u0430\u0441\u044C. \u0422\u0435\u043A\u0441\u0442 \u043C\u043E\u0436\u043D\u043E \u0441\u043A\u043E\u043F\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u0438\u0437 \u043F\u0430\u043D\u0435\u043B\u0438.",
     input_unavailable: "\u041D\u0430\u0439\u0434\u0435\u043D\u043D\u044B\u0439 \u044D\u043B\u0435\u043C\u0435\u043D\u0442 \u043F\u043E\u0447\u0442\u044B \u043D\u0435 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442 \u0432\u0432\u043E\u0434 \u0442\u0435\u043A\u0441\u0442\u0430. \u0421\u043A\u0440\u0438\u043F\u0442 \u043D\u0435 \u0441\u043C\u043E\u0433 \u0437\u0430\u043F\u043E\u043B\u043D\u0438\u0442\u044C \u043F\u043E\u043B\u0435.",
     interface_timeout: "\u041D\u0443\u0436\u043D\u044B\u0439 \u044D\u043B\u0435\u043C\u0435\u043D\u0442 \u043F\u043E\u0447\u0442\u043E\u0432\u043E\u0433\u043E \u0438\u043D\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u0430 \u043D\u0435 \u043F\u043E\u044F\u0432\u0438\u043B\u0441\u044F \u0432\u043E\u0432\u0440\u0435\u043C\u044F.",
     unexpected: "\u0417\u0430\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u0435 \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u043B\u043E\u0441\u044C \u0438\u0437-\u0437\u0430 \u0432\u043D\u0443\u0442\u0440\u0435\u043D\u043D\u0435\u0439 \u043E\u0448\u0438\u0431\u043A\u0438 \u0441\u043A\u0440\u0438\u043F\u0442\u0430. \u041F\u043E\u0434\u0433\u043E\u0442\u043E\u0432\u043A\u0443 \u043F\u0438\u0441\u044C\u043C\u0430 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u0442\u044C \u043D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C."
@@ -220,7 +224,8 @@
   // src/mail-body.ts
   var messages2 = {
     unavailable: "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043F\u043E\u0434\u043A\u043B\u044E\u0447\u0438\u0442\u044C\u0441\u044F \u043A \u0440\u0435\u0434\u0430\u043A\u0442\u043E\u0440\u0443 \u0442\u0435\u043A\u0441\u0442\u0430 \u043F\u043E\u0447\u0442\u044B. \u041F\u0438\u0441\u044C\u043C\u043E \u043D\u0435 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u043E.",
-    write_failed: "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0432\u0441\u0442\u0430\u0432\u0438\u0442\u044C \u0442\u0435\u043A\u0441\u0442 \u0432 \u0440\u0435\u0434\u0430\u043A\u0442\u043E\u0440 \u043F\u043E\u0447\u0442\u044B. \u041F\u0438\u0441\u044C\u043C\u043E \u043D\u0435 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u043E.",
+    write_failed: "\u0420\u0435\u0434\u0430\u043A\u0442\u043E\u0440 \u043F\u043E\u0447\u0442\u044B \u043D\u0435 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0434\u0438\u043B \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u0438\u0435 \u0442\u0435\u043A\u0441\u0442\u0430. \u041F\u0438\u0441\u044C\u043C\u043E \u043D\u0435 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u043E.",
+    mismatch: "\u0421\u043E\u0445\u0440\u0430\u043D\u0451\u043D\u043D\u044B\u0439 \u0442\u0435\u043A\u0441\u0442 \u043F\u0438\u0441\u044C\u043C\u0430 \u043E\u0442\u043B\u0438\u0447\u0430\u0435\u0442\u0441\u044F \u043E\u0442 \u043F\u043E\u0434\u0433\u043E\u0442\u043E\u0432\u043B\u0435\u043D\u043D\u043E\u0433\u043E. \u041F\u0438\u0441\u044C\u043C\u043E \u043D\u0435 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u043E.",
     cancelled: "\u0417\u0430\u043F\u043E\u043B\u043D\u0435\u043D\u0438\u0435 \u0442\u0435\u043A\u0441\u0442\u0430 \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D\u043E. \u041F\u0438\u0441\u044C\u043C\u043E \u043D\u0435 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u043E."
   };
   var MailBodyError = class extends Error {
@@ -233,6 +238,55 @@
   function guard(body, signal) {
     if (signal.aborted) throw new MailBodyError("cancelled");
     if (!body.isConnected) throw new MailBodyError("unavailable");
+  }
+  function canonical(text) {
+    return text.replace(/\r\n?/g, "\n").replace(/\u00a0/g, " ").trim();
+  }
+  function renderedText(root) {
+    let result = "";
+    const appendBreak = (count) => {
+      if (!result) return;
+      const existing = result.match(/\n*$/)[0].length;
+      if (existing < count) result += "\n".repeat(count - existing);
+    };
+    const visit = (node, preserve2) => {
+      if (node.nodeType === 3) {
+        const value = node.textContent || "";
+        if (!preserve2 && /^[\t\r\n\f ]*$/.test(value) && (!result || result.endsWith("\n")))
+          return;
+        result += preserve2 ? value : value.replace(/[\t\r\n\f ]+/g, " ");
+        return;
+      }
+      if (node.nodeType !== 1) return;
+      const element = node;
+      const tag = element.tagName.toLowerCase();
+      if (["script", "style", "template", "noscript"].includes(tag)) return;
+      if (element.hidden || element.getAttribute("aria-hidden") === "true")
+        return;
+      if (element.getAttribute("data-cke-filler") !== null || element.getAttribute("data-cke-bogus") !== null)
+        return;
+      if (tag === "br") {
+        result += "\n";
+        return;
+      }
+      const paragraph = /^(p|h[1-6]|blockquote)$/.test(tag);
+      const block = paragraph || /^(div|section|article|header|footer|li|tr|pre)$/.test(tag);
+      if (block) appendBreak(paragraph ? 2 : 1);
+      const literal = preserve2 || tag === "pre" || /^(pre|pre-wrap|break-spaces)$/.test(element.style?.whiteSpace || "");
+      for (const child of element.childNodes) visit(child, literal);
+      if (block) appendBreak(paragraph ? 2 : 1);
+    };
+    const preserve = /^(pre|pre-wrap|break-spaces)$/.test(
+      root.style?.whiteSpace || ""
+    );
+    for (const child of root.childNodes) visit(child, preserve);
+    return canonical(result.replace(/ *\n */g, "\n"));
+  }
+  function htmlText(html, body) {
+    const Parser = body.ownerDocument.defaultView?.DOMParser;
+    if (!Parser) throw new MailBodyError("unavailable");
+    const parsed = new Parser().parseFromString(html, "text/html");
+    return renderedText(parsed.body);
   }
   function textHtml(text) {
     const escaped = text.replace(/\r\n?/g, "\n").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -257,7 +311,7 @@
     if (matches.length > 1) throw new MailBodyError("unavailable");
     const instance = matches[0];
     if (!instance || instance.status !== "ready" || instance.readOnly) return;
-    if (typeof instance.setData !== "function" || typeof instance.fire !== "function")
+    if (typeof instance.setData !== "function" || typeof instance.getData !== "function" || typeof instance.fire !== "function")
       throw new MailBodyError("unavailable");
     return instance;
   }
@@ -299,6 +353,8 @@
   async function writeMailBody(body, text, signal) {
     try {
       guard(body, signal);
+      const expected = canonical(text);
+      if (!expected) throw new MailBodyError("write_failed");
       const hostname = body.ownerDocument.location?.hostname || "";
       const managed = !!editorWindow(body).CKEDITOR || /^mail\.yandex\.(ru|com|by|kz)$/.test(hostname) || body.matches(".cke_editable, .cke_wysiwyg_div, [data-cke-editor-id]");
       if (managed) {
@@ -309,8 +365,21 @@
         if (matchingEditor(body) !== instance)
           throw new MailBodyError("unavailable");
         instance.fire("change");
-        guard(body, signal);
-        return;
+        const verify2 = () => {
+          try {
+            guard(body, signal);
+            if (matchingEditor(body) !== instance)
+              throw new MailBodyError("unavailable");
+            const stored = instance.getData();
+            if (typeof stored !== "string" || htmlText(stored, body) !== expected || renderedText(body) !== expected)
+              throw new MailBodyError("mismatch");
+          } catch (error) {
+            if (error instanceof MailBodyError) throw error;
+            throw new MailBodyError("mismatch");
+          }
+        };
+        verify2();
+        return { verify: verify2 };
       }
       const doc = body.ownerDocument;
       if (typeof doc.execCommand !== "function")
@@ -326,7 +395,12 @@
       body.style.whiteSpace = "pre-wrap";
       if (!doc.execCommand("insertText", false, text))
         throw new MailBodyError("write_failed");
-      guard(body, signal);
+      const verify = () => {
+        guard(body, signal);
+        if (renderedText(body) !== expected) throw new MailBodyError("mismatch");
+      };
+      verify();
+      return { verify };
     } catch (error) {
       if (error instanceof MailBodyError) throw error;
       throw new MailBodyError(signal.aborted ? "cancelled" : "write_failed");
@@ -455,6 +529,34 @@
       const text = yandexPendingRecipientText(element);
       return text.replace(/[\s\u200B-\u200D\u2060\uFEFF]/g, "").length > 0;
     });
+  }
+  function yandexHasCopyRecipients(root) {
+    for (const wrapper of root.querySelectorAll(copyWrapper)) {
+      if (yandexRecipientAddresses(wrapper).length) return true;
+    }
+    const fields = [...root.querySelectorAll(editableSelector)].filter((element) => !excluded(element)).map((element) => ({ element, names: names(element, root) })).filter(
+      (candidate) => !candidate.names.some((name) => unrelatedNames.has(name)) && (candidate.names.some(
+        (name) => toNames.has(name) || copyNames.has(name)
+      ) || !!candidate.element.closest(
+        `${toWrapper}, ${copyWrapper}, .composeYabbles`
+      ))
+    );
+    for (const candidate of fields) {
+      if (!candidate.names.some((name) => copyNames.has(name)) && !candidate.element.closest(copyWrapper))
+        continue;
+      const field2 = candidate.element;
+      if ((field2.tagName === "INPUT" || field2.tagName === "TEXTAREA") && field2.value.trim())
+        return true;
+      if (yandexRecipientAddresses(field2).length) return true;
+      for (let region = field2.parentElement; region && region !== root; region = region.parentElement) {
+        if (fields.some(
+          (other) => other.element !== field2 && region.contains(other.element)
+        ))
+          break;
+        if (yandexRecipientAddresses(region).length) return true;
+      }
+    }
+    return false;
   }
 
   // src/adapters.ts
@@ -622,6 +724,71 @@
       )
     ].sort();
   }
+  function hasPendingGmailRecipient(root) {
+    return [
+      ...root.querySelectorAll(
+        'input[name="to"], textarea[name="to"], input[name="cc"], textarea[name="cc"], input[name="bcc"], textarea[name="bcc"], input[role="combobox"][aria-label="To recipients"], input[role="combobox"][aria-label="\u041F\u043E\u043B\u0443\u0447\u0430\u0442\u0435\u043B\u0438"]'
+      )
+    ].some(
+      (input) => visible(input) && input.type !== "hidden" && input.value.trim().length > 0
+    );
+  }
+  function hasCopyRecipients(root, provider) {
+    if (provider === "yandex") return yandexHasCopyRecipients(root);
+    const copyFields = root.querySelectorAll(
+      'input[name="cc"], input[name="bcc"], textarea[name="cc"], textarea[name="bcc"], [data-name="cc"], [data-name="bcc"], [aria-label="Cc recipients"], [aria-label="Bcc recipients"], [aria-label="\u041F\u043E\u043B\u0443\u0447\u0430\u0442\u0435\u043B\u0438 \u043A\u043E\u043F\u0438\u0438"], [aria-label="\u041F\u043E\u043B\u0443\u0447\u0430\u0442\u0435\u043B\u0438 \u0441\u043A\u0440\u044B\u0442\u043E\u0439 \u043A\u043E\u043F\u0438\u0438"]'
+    );
+    return [...copyFields].some((field2) => {
+      if ((field2 instanceof HTMLInputElement || field2 instanceof HTMLTextAreaElement) && field2.value.trim())
+        return true;
+      const region = field2.closest("tr") || (field2.parentElement !== root ? field2.parentElement : null) || field2;
+      if (recipientAddresses(region, provider).length) return true;
+      return false;
+    });
+  }
+  async function commitYandexRecipients(root, recipient, subject, body, originalBodyText, addresses, findRecipient, guard2) {
+    const expected = [
+      ...new Set(addresses.map((value) => value.toLowerCase()))
+    ].sort();
+    const normalizePending = (value) => value.replace(/[\u200B-\u200D\u2060\uFEFF]/g, "").replace(/\u00a0/g, " ").trim();
+    const insertedText = normalizePending(addresses.join(", "));
+    const checkEditor = () => {
+      guard2();
+      if (!root.isConnected || !root.contains(body) || !visible(body))
+        throw new EditorError("body_missing");
+      if (!root.contains(subject) || !visible(subject))
+        throw new EditorError("subject_missing");
+      if (!root.contains(recipient) || findRecipient() !== recipient)
+        throw new EditorError("recipients_missing");
+      if (subject.value.trim()) throw new EditorError("existing_subject");
+      if ((body.textContent?.trim() || "") !== originalBodyText)
+        throw new EditorError("existing_body");
+      if (yandexHasCopyRecipients(root))
+        throw new EditorError("recipients_mismatch");
+      const actual = yandexRecipientAddresses(root);
+      if (actual.some((address) => !expected.includes(address)))
+        throw new EditorError("recipients_mismatch");
+      const pending = normalizePending(yandexPendingRecipientText(recipient));
+      if (!actual.length && pending !== insertedText)
+        throw new EditorError("recipients_mismatch");
+      return { actual, pending };
+    };
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    if (!checkEditor().actual.length) enter(recipient);
+    const until = Date.now() + 5e3;
+    while (Date.now() < until) {
+      const { actual, pending } = checkEditor();
+      if (JSON.stringify(actual) === JSON.stringify(expected) && !pending) return;
+      if (!actual.length) {
+        recipient.focus();
+        const afterFocus = checkEditor();
+        if (!afterFocus.actual.length) subject.focus();
+      }
+      await new Promise((resolve) => setTimeout(resolve, 150));
+    }
+    checkEditor();
+    throw new EditorError("recipient_unconfirmed");
+  }
   async function fillLetter(account, letter, signal, stillActive = () => true) {
     const guard2 = () => {
       signal.throwIfAborted();
@@ -686,8 +853,9 @@
       throw new EditorError("existing_body");
     if (account.provider === "yandex" && yandexHasPendingRecipient(root, visible))
       throw new EditorError("existing_recipients");
+    const originalBodyText = body.textContent?.trim() || "";
     const recipientBatches = account.provider === "yandex" ? [letter.to] : letter.to.map((address) => [address]);
-    for (const [index, addresses] of recipientBatches.entries()) {
+    for (const addresses of recipientBatches) {
       guard2();
       const recipient = await waitFor(
         findRecipient,
@@ -697,41 +865,76 @@
       );
       guard2();
       recipient.focus();
-      const pending = index > 0 && (recipient instanceof HTMLInputElement || recipient instanceof HTMLTextAreaElement) ? recipient.value.trim() : "";
-      insertRecipient(
-        recipient,
-        [pending, addresses.join(", ")].filter(Boolean).join(", ")
-      );
-      await new Promise((resolve) => setTimeout(resolve, 0));
-      guard2();
-      enter(recipient);
-      subject.focus();
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      insertRecipient(recipient, addresses.join(", "));
+      if (account.provider === "yandex") {
+        await commitYandexRecipients(
+          root,
+          recipient,
+          subject,
+          body,
+          originalBodyText,
+          addresses,
+          findRecipient,
+          guard2
+        );
+      } else {
+        enter(recipient);
+        await waitFor(
+          () => addresses.every(
+            (address) => recipientAddresses(root, account.provider).includes(
+              address.toLowerCase()
+            )
+          ),
+          signal,
+          5e3,
+          "recipient_unconfirmed"
+        );
+      }
     }
     guard2();
     setInput(subject, letter.subject);
     const text = letter.body + (originalSignature ? `
 
 ${originalSignature}` : "");
+    let bodyCheckpoint;
     try {
-      await writeMailBody(body, text, signal);
-    } catch {
+      bodyCheckpoint = await writeMailBody(body, text, signal);
+    } catch (cause) {
       guard2();
-      throw new EditorError("body_write_failed");
+      throw new EditorError(
+        cause instanceof MailBodyError && cause.code === "mismatch" ? "body_mismatch" : "body_not_committed"
+      );
     }
     body.blur();
     subject.blur();
-    const assertActive = () => {
+    await new Promise((r) => setTimeout(r, 500));
+    const expected = [...new Set(letter.to.map((s) => s.toLowerCase()))].sort();
+    const expectedSubject = letter.subject;
+    const verify = () => {
       guard2();
       if (!root.isConnected || !root.contains(body) || !visible(body))
         throw new EditorError("body_missing");
+      if (!root.contains(subject) || !visible(subject))
+        throw new EditorError("subject_missing");
+      const actual = recipientAddresses(root, account.provider);
+      if (JSON.stringify(actual) !== JSON.stringify(expected) || hasCopyRecipients(root, account.provider))
+        throw new EditorError("recipients_mismatch");
+      if (account.provider === "yandex" ? yandexHasPendingRecipient(root, visible) : hasPendingGmailRecipient(root))
+        throw new EditorError("recipient_unconfirmed");
+      if (subject.value !== expectedSubject)
+        throw new EditorError("subject_mismatch");
+      try {
+        bodyCheckpoint.verify();
+      } catch {
+        throw new EditorError("body_mismatch");
+      }
     };
-    assertActive();
+    verify();
     return {
       root,
       body,
       provider: account.provider,
-      assertActive
+      verify
     };
   }
 
@@ -857,12 +1060,12 @@ ${originalSignature}` : "");
     }
     while (pending()) {
       signal.throwIfAborted();
-      prepared.assertActive();
+      prepared.verify();
       if (Date.now() >= deadline) throw new SendError("previous_notice_timeout");
       await new Promise((resolve) => setTimeout(resolve, 150));
     }
     signal.throwIfAborted();
-    prepared.assertActive();
+    prepared.verify();
   }
   async function sendLetter(prepared, signal, beforeClick, onWaiting) {
     let claimed = false;
@@ -870,13 +1073,13 @@ ${originalSignature}` : "");
     try {
       signal.throwIfAborted();
       if (attempted.has(prepared)) throw new SendError("already_attempted");
-      prepared.assertActive();
+      prepared.verify();
       await waitForPreviousYandexNotice(prepared, signal, onWaiting);
       const deadline = Date.now() + 1e4;
       let button2 = null;
       while (!(button2 = sendButton(prepared))) {
         signal.throwIfAborted();
-        prepared.assertActive();
+        prepared.verify();
         if (Date.now() >= deadline) throw new SendError("button_missing");
         await new Promise((resolve) => setTimeout(resolve, 150));
       }
@@ -924,7 +1127,7 @@ ${originalSignature}` : "");
         attributeFilter: ["hidden", "aria-hidden", "style", "class"]
       });
       signal.throwIfAborted();
-      prepared.assertActive();
+      prepared.verify();
       const ready = sendButton(prepared);
       if (ready !== button2) throw new SendError("button_missing");
       claimed = true;
@@ -1965,7 +2168,7 @@ ${values["\u0424\u0418\u041E"]}`
     style.textContent = "button{font:14px system-ui;cursor:pointer;background:#204c3c;color:white;border:1px solid #93b6a3;border-radius:9px;padding:12px 16px;box-shadow:0 4px 20px #0003}button:focus-visible{outline:3px solid #9bd6b9}p{font:13px/1.5 system-ui;max-width:320px;padding:12px;background:white;color:#8d2929;border:1px solid #d6b3b3;border-radius:8px}[hidden]{display:none!important}";
     const trigger = doc.createElement("button");
     trigger.type = "button";
-    const label = "\u2197 \u041E\u0431\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u043F\u043E \u041F\u0414 \xB7 0.2.10";
+    const label = "\u2197 \u041E\u0431\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u043F\u043E \u041F\u0414 \xB7 0.2.9";
     trigger.textContent = label;
     const failure = doc.createElement("p");
     failure.hidden = true;
@@ -2034,7 +2237,7 @@ ${values["\u0424\u0418\u041E"]}`
     trigger.onclick = () => void open();
     try {
       GM_registerMenuCommand(
-        "\u041E\u0431\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u043F\u043E \u041F\u0414 \xB7 0.2.10 \u2014 \u043E\u0442\u043A\u0440\u044B\u0442\u044C",
+        "\u041E\u0431\u0440\u0430\u0449\u0435\u043D\u0438\u044F \u043F\u043E \u041F\u0414 \xB7 0.2.9 \u2014 \u043E\u0442\u043A\u0440\u044B\u0442\u044C",
         () => void open()
       );
     } catch {

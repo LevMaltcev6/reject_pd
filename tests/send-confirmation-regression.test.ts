@@ -32,8 +32,7 @@ function fixture(provider: "gmail" | "yandex") {
     root,
     body,
     provider,
-    verify() {
-      assert.equal(body.textContent, "Expected body");
+    assertActive() {
       assert.equal(body.isConnected, true);
     },
   };

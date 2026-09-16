@@ -188,8 +188,6 @@ async function mountPanel(onClose: () => void) {
   for (const c of companies)
     if (saved[c.id]) {
       const s = saved[c.id];
-      for (const key of ["legalName", "inn", "ogrn"] as const)
-        if (typeof s[key] === "string") c[key] = s[key];
       if (
         Array.isArray(s.emails) &&
         s.emails.every((e) => typeof e === "string")
@@ -433,9 +431,6 @@ async function mountPanel(onClose: () => void) {
     const value: Record<string, Partial<Company>> = {};
     for (const c of companies)
       value[c.id] = {
-        legalName: c.legalName,
-        inn: c.inn,
-        ogrn: c.ogrn,
         emails: c.emails,
       };
     store.set(SETTINGS, value);

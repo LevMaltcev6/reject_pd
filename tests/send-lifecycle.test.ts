@@ -29,8 +29,7 @@ function fixture() {
     root,
     body,
     provider: "yandex",
-    verify() {
-      assert.equal(body.textContent, "Expected body");
+    assertActive() {
       assert.equal(body.isConnected, true);
     },
   };

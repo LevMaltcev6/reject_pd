@@ -221,6 +221,93 @@ test("built UI persists partial edits and explicit deletions without requiring a
   assertPersonal(await reloaded.open(), { fio: "Ива", email: "" });
 });
 
+test("updated company requisites replace stale saved details while custom recipients survive editing and reload", async (t) => {
+  const catalogKey = "return-pd:catalog-v1";
+  const companyId = "5a282799e3e5";
+  const customEmail = "saved-recipient@example.invalid";
+  const editedEmail = "edited-recipient@example.invalid";
+  const values = new Map<string, unknown>([
+    [PROFILE_KEY, personal],
+    [
+      catalogKey,
+      {
+        [companyId]: {
+          legalName: "STALE_LEGAL_NAME",
+          inn: "",
+          ogrn: "1111111111111",
+          emails: [customEmail],
+        },
+      },
+    ],
+  ]);
+  const recipientInput = (root: ShadowRoot) => {
+    const card = [...root.querySelectorAll("details")].find(
+      (details) =>
+        details.querySelector("summary")?.textContent ===
+        "Адреса и примечания компании",
+    );
+    assert.ok(card, "company recipient editor must remain available");
+    const input = card.querySelector("input");
+    assert.ok(input);
+    return input;
+  };
+  const assertFreshRequisites = (root: ShadowRoot, recipient: string) => {
+    const body = root.querySelector("pre")?.textContent || "";
+    assert.match(body, /ПАО «МТС»/);
+    assert.match(body, /ИНН организации: 7740000076/);
+    assert.match(body, /ОГРН организации: 1027700149124/);
+    assert.doesNotMatch(body, /STALE_LEGAL_NAME|1111111111111/);
+    assert.equal(recipientInput(root).value, recipient);
+    assert.equal(
+      root.querySelector(".preview-title")?.nextElementSibling?.textContent,
+      `Кому: ${recipient}`,
+    );
+    const fieldLabels = [...root.querySelectorAll("label")]
+      .map((label) => label.firstChild?.textContent || "")
+      .join("\n");
+    assert.doesNotMatch(
+      fieldLabels,
+      /Юридическое наименование|ИНН организации|ОГРН организации/,
+      "imported company requisites must not reintroduce removed form fields",
+    );
+  };
+
+  const first = page(values);
+  t.after(() => first.close());
+  const root = await first.open();
+  assertFreshRequisites(root, customEmail);
+
+  const input = recipientInput(root);
+  input.value = editedEmail;
+  input.dispatchEvent(new first.w.Event("input", { bubbles: true }));
+  await until(
+    () =>
+      root.querySelector(".preview-title")?.nextElementSibling?.textContent ===
+      `Кому: ${editedEmail}`,
+    "recipient changes must reach the letter preview",
+  );
+  const saved = values.get(catalogKey) as Record<
+    string,
+    Record<string, unknown>
+  >;
+  assert.deepEqual(saved[companyId].emails, [editedEmail]);
+  for (const entry of Object.values(saved)) {
+    for (const key of ["legalName", "inn", "ogrn"]) {
+      assert.equal(
+        Object.hasOwn(entry, key),
+        false,
+        `${key} must not be persisted alongside recipient overrides`,
+      );
+    }
+  }
+  assertFreshRequisites(root, editedEmail);
+  first.close();
+
+  const reloaded = page(values);
+  t.after(() => reloaded.close());
+  assertFreshRequisites(await reloaded.open(), editedEmail);
+});
+
 test("persistent profile excludes date, selected companies, templates and letter session data", async (t) => {
   const values = new Map<string, unknown>();
   const firstDate = new Date(2030, 0, 2, 12).getTime();

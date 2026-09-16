@@ -7,8 +7,7 @@ import {
   identifyAccount,
   currentMailContext,
 } from "../src/adapters";
-import type { Account, Letter } from "../src/types";
-import { EditorError, type EditorErrorCode } from "../src/editor-errors";
+import type { Letter } from "../src/types";
 
 const message: Letter = {
   companyId: "test",
@@ -102,6 +101,13 @@ for (const provider of ["gmail", "yandex"] as const) {
     const f = fixture(provider);
     await fillLetter(f.account, message, new AbortController().signal);
     assert.equal(f.sent(), 0);
+    if (provider === "gmail")
+      assert.deepEqual(
+        [...document.querySelectorAll("[email]")].map((chip) =>
+          chip.getAttribute("email"),
+        ),
+        message.to,
+      );
     assert.equal(
       editorText(f.dom.window.document.querySelector("[contenteditable]")!),
       message.body,
@@ -196,26 +202,40 @@ test("Yandex session without a ready mail editor does not write anything", async
   assert.equal(f.sent(), 0);
   f.dom.window.close();
 });
-test("typed recipient which was not committed is not treated as successful", async () => {
+test("Gmail preserves all template recipients when the field remains plain input", async () => {
   const f = fixture("gmail");
-  document.querySelector("button")!.addEventListener("click", () => {
-    const input = document.querySelector('input[name="to"]')!;
-    input.replaceWith(input.cloneNode());
-  });
-  const abort = new AbortController();
-  setTimeout(() => abort.abort(), 200);
-  await assert.rejects(fillLetter(f.account, message, abort.signal));
-  assert.equal(f.sent(), 0);
-  f.dom.window.close();
+  try {
+    document.querySelector("button")!.addEventListener("click", () => {
+      const input = document.querySelector('input[name="to"]')!;
+      input.replaceWith(input.cloneNode());
+    });
+    const prepared = await fillLetter(
+      f.account,
+      message,
+      new AbortController().signal,
+    );
+    prepared.assertActive();
+    assert.equal(document.querySelectorAll("[email]").length, 0);
+    assert.equal(
+      document.querySelector<HTMLInputElement>('input[name="to"]')!.value,
+      message.to.join(", "),
+    );
+    assert.equal(editorText(prepared.body), message.body);
+    assert.equal(f.sent(), 0);
+  } finally {
+    f.dom.window.close();
+  }
 });
 
 for (const field of ["recipients", "subject", "body"] as const) {
-  test(`Yandex reports the exact ${field} mismatch when the editor changes the entered value`, async () => {
+  test(`Yandex prepares the template when the editor changes the entered ${field}`, async () => {
     const f = fixture("yandex");
     try {
+      let changed = false;
       document.querySelector("button")!.addEventListener("click", () => {
         const body = document.querySelector("[contenteditable]")!;
         body.addEventListener("input", () => {
+          changed = true;
           if (field === "recipients") {
             document.querySelector(".composeYabble")!.textContent =
               "wrong@example.org";
@@ -228,15 +248,48 @@ for (const field of ["recipients", "subject", "body"] as const) {
           }
         });
       });
-      const code: EditorErrorCode = `${field}_mismatch`;
-      await assert.rejects(
-        fillLetter(
-          currentMailContext()!,
-          message,
-          new AbortController().signal,
-        ),
-        (error: unknown) => error instanceof EditorError && error.code === code,
+      const prepared = await fillLetter(
+        currentMailContext()!,
+        message,
+        new AbortController().signal,
       );
+      assert.equal(changed, true);
+      prepared.assertActive();
+      assert.equal(f.sent(), 0);
+    } finally {
+      f.dom.window.close();
+    }
+  });
+}
+
+for (const provider of ["gmail", "yandex"] as const) {
+  test(`${provider}: unrecognized recipient chip markup does not block preparation`, async () => {
+    const f = fixture(provider);
+    try {
+      document.querySelector("button")!.addEventListener("click", () => {
+        const to = document.querySelector('input[name="to"]')!;
+        to.addEventListener(provider === "gmail" ? "keydown" : "blur", () => {
+          for (const chip of document.querySelectorAll(
+            "[email], .composeYabble",
+          )) {
+            chip.removeAttribute("email");
+            chip.className = "new-provider-recipient";
+          }
+        });
+      });
+      const prepared = await fillLetter(
+        f.account,
+        message,
+        new AbortController().signal,
+      );
+      prepared.assertActive();
+      assert.deepEqual(
+        [...document.querySelectorAll(".new-provider-recipient")].map(
+          (chip) => chip.textContent,
+        ),
+        message.to,
+      );
+      assert.equal(editorText(prepared.body), message.body);
       assert.equal(f.sent(), 0);
     } finally {
       f.dom.window.close();
@@ -401,7 +454,7 @@ test("Yandex commits both recipient addresses to the saved model in one input/bl
       message,
       new AbortController().signal,
     );
-    prepared.verify();
+    prepared.assertActive();
     const reopenedRecipients = structuredClone(savedRecipients);
     assert.deepEqual(
       reopenedRecipients,
@@ -519,7 +572,7 @@ test("Yandex lets the input model process its batch before the first blur", asyn
   }
 });
 
-test("Yandex retries an ignored blur without inserting the full recipient batch again", async () => {
+test("Yandex continues after one commit attempt when the recipient batch stays pending", async () => {
   const f = delayedRecipientFixture({ ignoreFirstBlur: true });
   try {
     const prepared = await fillLetter(
@@ -527,21 +580,20 @@ test("Yandex retries an ignored blur without inserting the full recipient batch 
       message,
       new AbortController().signal,
     );
-    prepared.verify();
+    prepared.assertActive();
     assert.deepEqual(f.state(), {
       inputs: 1,
-      blurs: 2,
+      blurs: 1,
       enters: 1,
       readyAtFirstBlur: true,
-      saved: message.to,
+      saved: [],
     });
-    assert.equal(f.sent(), 0);
     assert.equal(
-      editorText(
-        document.querySelector(".composeReact-MBody [contenteditable]")!,
-      ),
-      message.body,
+      document.querySelector(".composeYabbles")!.textContent,
+      message.to.join(", "),
     );
+    assert.equal(f.sent(), 0);
+    assert.equal(editorText(prepared.body), message.body);
   } finally {
     f.dom.window.close();
   }
@@ -554,42 +606,29 @@ for (const edit of [
   "copy",
   "replace",
 ] as const) {
-  test(`Yandex does not retry a pending recipient after a user's ${edit} edit`, async () => {
-    const f = delayedRecipientFixture({
-      ignoreFirstBlur: true,
-      afterFirstBlur(to) {
-        setTimeout(() => {
-          if (edit === "recipient") to.textContent = "my-edit@example.org";
-          if (edit === "subject")
-            document.querySelector<HTMLInputElement>(
-              'input[name="subject"]',
-            )!.value = "Моя тема";
-          if (edit === "body")
-            document.querySelector(
-              ".composeReact-MBody [contenteditable]",
-            )!.textContent = "Мой текст";
-          if (edit === "copy") {
-            const input = document.createElement("input");
-            input.name = "cc";
-            input.value = "my-copy@example.org";
-            to.parentElement!.after(input);
-          }
-          if (edit === "replace") to.replaceWith(to.cloneNode(true));
-        }, 0);
-      },
-    });
+  test(`Yandex does not revalidate the prepared template after a ${edit} change`, async () => {
+    const f = fixture("yandex");
     try {
-      await assert.rejects(
-        fillLetter(
-          currentMailContext()!,
-          message,
-          new AbortController().signal,
-        ),
-        (error: unknown) => error instanceof EditorError,
+      const prepared = await fillLetter(
+        currentMailContext()!,
+        message,
+        new AbortController().signal,
       );
-      assert.equal(f.state().inputs, 1);
-      assert.equal(f.state().blurs, 1);
-      assert.deepEqual(f.state().saved, []);
+      const to = document.querySelector<HTMLInputElement>('input[name="to"]')!;
+      if (edit === "recipient") to.value = "my-edit@example.org";
+      if (edit === "subject")
+        document.querySelector<HTMLInputElement>(
+          'input[name="subject"]',
+        )!.value = "Моя тема";
+      if (edit === "body") prepared.body.textContent = "Мой текст";
+      if (edit === "copy") {
+        const input = document.createElement("input");
+        input.name = "cc";
+        input.value = "my-copy@example.org";
+        to.parentElement!.after(input);
+      }
+      if (edit === "replace") to.replaceWith(to.cloneNode(true));
+      prepared.assertActive();
       assert.equal(f.sent(), 0);
     } finally {
       f.dom.window.close();
@@ -597,7 +636,7 @@ for (const edit of [
   });
 }
 
-test("Yandex cancellation during an ignored blur prevents another focus/blur", async () => {
+test("Yandex cancellation during recipient commit prevents filling subject and body", async () => {
   const abort = new AbortController();
   const f = delayedRecipientFixture({
     ignoreFirstBlur: true,
@@ -624,7 +663,7 @@ test("Yandex cancellation during an ignored blur prevents another focus/blur", a
   }
 });
 
-test("Yandex waits for a partly painted batch without committing it a second time", async () => {
+test("Yandex proceeds while a partly painted recipient batch finishes asynchronously", async () => {
   const f = delayedRecipientFixture({ partial: true, finishPartial: true });
   try {
     const prepared = await fillLetter(
@@ -632,25 +671,33 @@ test("Yandex waits for a partly painted batch without committing it a second tim
       message,
       new AbortController().signal,
     );
-    prepared.verify();
+    prepared.assertActive();
     assert.equal(f.state().inputs, 1);
     assert.equal(f.state().blurs, 1);
+    assert.deepEqual(f.state().saved, [message.to[0]]);
+    assert.equal(editorText(prepared.body), message.body);
+    await new Promise((resolve) => setTimeout(resolve, 200));
     assert.deepEqual(f.state().saved, message.to);
+    assert.equal(f.state().blurs, 1);
     assert.equal(f.sent(), 0);
   } finally {
     f.dom.window.close();
   }
 });
 
-test("Yandex never retries an incomplete batch with an existing recipient chip", async () => {
+test("Yandex proceeds with an incomplete batch after one recipient commit attempt", async () => {
   const f = delayedRecipientFixture({ partial: true });
   try {
-    await assert.rejects(
-      fillLetter(currentMailContext()!, message, AbortSignal.timeout(400)),
+    const prepared = await fillLetter(
+      currentMailContext()!,
+      message,
+      new AbortController().signal,
     );
+    prepared.assertActive();
     assert.equal(f.state().inputs, 1);
     assert.equal(f.state().blurs, 1);
     assert.deepEqual(f.state().saved, [message.to[0]]);
+    assert.equal(editorText(prepared.body), message.body);
     assert.equal(f.sent(), 0);
   } finally {
     f.dom.window.close();

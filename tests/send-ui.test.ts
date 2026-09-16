@@ -586,24 +586,24 @@ test("reloading during acknowledgement never resumes the in-flight message or re
   );
 });
 
-test("27-company progress names the acknowledgement being awaited and renders full results only on demand", async (t) => {
+test("50-company progress names the acknowledgement being awaited and renders full results only on demand", async (t) => {
   const p = page(new Map(), { acknowledge: false });
   t.after(() => p.close());
   const root = await p.open();
   fillProfile(p, root);
   control(root, "Выбрать все").click();
-  control(root, "Отправить 27 писем").click();
+  control(root, "Отправить 50 писем").click();
   await until(
     () => p.sent.length === 1,
     "first Send must be waiting for acknowledgement",
   );
-  assert.equal(results(root).length, 27);
+  assert.equal(results(root).length, 50);
   assert.equal(
     root.querySelectorAll(".results pre").length,
     0,
-    "collapsed results must not build 27 full letters during the send callback",
+    "collapsed results must not build 50 full letters during the send callback",
   );
-  assert.match(dock(root).textContent!, /Отправлено 0 из 27/);
+  assert.match(dock(root).textContent!, /Отправлено 0 из 50/);
   assert.match(dock(root).textContent!, /МТС: ждём подтверждения почты/);
   const firstRow = results(root)[0];
   control(dock(root), "Открыть панель").click();
@@ -635,7 +635,7 @@ test("27-company progress names the acknowledgement being awaited and renders fu
   assert.equal(details.querySelector("pre"), body);
   assert.equal(root.querySelectorAll(".results pre").length, 1);
   control(root, "Закрыть").click();
-  assert.match(dock(root).textContent!, /Отправлено 1 из 27/);
+  assert.match(dock(root).textContent!, /Отправлено 1 из 50/);
   assert.match(
     dock(root).textContent!,
     /МТС: отправлено\. ОККО: ждём подтверждения почты/,

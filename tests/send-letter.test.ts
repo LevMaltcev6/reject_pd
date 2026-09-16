@@ -4,7 +4,6 @@ import { JSDOM } from "jsdom";
 import {
   installMailEditorFixture,
   installYandexRecipientFixture,
-  editorText,
 } from "./mail-editor-fixture";
 import { currentMailContext, fillLetter } from "../src/adapters";
 import { EditorError } from "../src/editor-errors";
@@ -184,9 +183,8 @@ for (const provider of ["gmail", "yandex"] as const) {
     "bcc",
     "subject",
     "body",
-    "job",
   ] as const) {
-    test(`${provider}: changed ${change} prevents sending`, async () => {
+    test(`${provider}: changed ${change} does not block the send attempt`, async () => {
       const f = await fixture(provider);
       try {
         if (change === "recipients") {
@@ -199,14 +197,33 @@ for (const provider of ["gmail", "yandex"] as const) {
           if (provider === "gmail")
             chip.setAttribute("email", chip.textContent);
         } else if (change === "cc" || change === "bcc") {
-          // Even a duplicate of an expected To address may not move to CC/BCC.
           const copy = document.createElement("input");
           copy.name = change;
           copy.value = letter.to[0];
           f.prepared.root.append(copy);
         } else if (change === "subject") f.subject.value += " изменена";
         else if (change === "body") f.prepared.body.textContent += " изменено";
-        else f.deactivate();
+        f.success();
+        let claims = 0;
+        await sendLetter(
+          f.prepared,
+          new AbortController().signal,
+          () => claims++,
+        );
+        assert.equal(claims, 1);
+        assert.equal(f.clicked(), 1);
+      } finally {
+        f.dom.window.close();
+      }
+    });
+  }
+
+  for (const change of ["job", "closed_editor"] as const) {
+    test(`${provider}: changed ${change} prevents sending`, async () => {
+      const f = await fixture(provider);
+      try {
+        if (change === "job") f.deactivate();
+        else f.prepared.root.remove();
         await assert.rejects(
           sendLetter(f.prepared, new AbortController().signal, () =>
             assert.fail("claim must not run"),
@@ -264,7 +281,7 @@ test("an updated provider status can acknowledge send and a hidden editor counts
   }
 });
 
-test("waits for the send button to become enabled and rechecks letter edits", async () => {
+test("waits for the send button to become enabled without rejecting letter edits", async () => {
   const f = await fixture("yandex");
   try {
     f.button.setAttribute("aria-disabled", "true");
@@ -272,14 +289,9 @@ test("waits for the send button to become enabled and rechecks letter edits", as
       f.subject.value = "Changed during readiness wait";
       f.button.setAttribute("aria-disabled", "false");
     }, 30);
-    await assert.rejects(
-      sendLetter(f.prepared, new AbortController().signal, () =>
-        assert.fail("no claim"),
-      ),
-      (error: unknown) =>
-        error instanceof EditorError && error.code === "subject_mismatch",
-    );
-    assert.equal(f.clicked(), 0);
+    f.success();
+    await sendLetter(f.prepared, new AbortController().signal, () => {});
+    assert.equal(f.clicked(), 1);
   } finally {
     f.dom.window.close();
   }
@@ -383,19 +395,14 @@ test("Gmail account changes after preparation block sending", async () => {
   }
 });
 
-test("an uncommitted recipient added after preparation is not sent", async () => {
+test("an uncommitted recipient added after preparation is left for the mail provider to validate", async () => {
   const f = await fixture("gmail");
   try {
     f.prepared.root.querySelector<HTMLInputElement>('input[name="to"]')!.value =
       "unexpected@example.invalid";
-    await assert.rejects(
-      sendLetter(f.prepared, new AbortController().signal, () =>
-        assert.fail("no claim"),
-      ),
-      (error: unknown) =>
-        error instanceof EditorError && error.code === "recipient_unconfirmed",
-    );
-    assert.equal(f.clicked(), 0);
+    f.success();
+    await sendLetter(f.prepared, new AbortController().signal, () => {});
+    assert.equal(f.clicked(), 1);
   } finally {
     f.dom.window.close();
   }
@@ -466,7 +473,7 @@ test("a newly inserted success phrase inside the email body cannot confirm sendi
 });
 
 for (const provider of ["gmail", "yandex"] as const) {
-  test(`${provider}: committed CC duplicating To still blocks sending`, async () => {
+  test(`${provider}: committed CC duplicating To does not block the send attempt`, async () => {
     const f = await fixture(provider);
     try {
       const row = document.createElement(provider === "gmail" ? "tr" : "div");
@@ -479,14 +486,9 @@ for (const provider of ["gmail", "yandex"] as const) {
           '<span class="js-yabble" data-email="first@example.invalid">Recipient</span><input name="cc">';
       }
       f.prepared.root.append(row);
-      await assert.rejects(
-        sendLetter(f.prepared, new AbortController().signal, () =>
-          assert.fail("no claim"),
-        ),
-        (error: unknown) =>
-          error instanceof EditorError && error.code === "recipients_mismatch",
-      );
-      assert.equal(f.clicked(), 0);
+      f.success();
+      await sendLetter(f.prepared, new AbortController().signal, () => {});
+      assert.equal(f.clicked(), 1);
     } finally {
       f.dom.window.close();
     }
@@ -511,7 +513,7 @@ test("Gmail hidden committed To values do not look like pending edits", async ()
 
 for (const label of ["Cc", "Bcc", "Копия", "Скрытая копия"]) {
   for (const change of ["moved", "duplicated"] as const) {
-    test(`Yandex label-only ${label} with ${change} To recipient blocks sending`, async () => {
+    test(`Yandex label-only ${label} with ${change} To recipient does not block sending`, async () => {
       const f = await fixture("yandex");
       try {
         const row = document.createElement("div");
@@ -520,15 +522,9 @@ for (const label of ["Cc", "Bcc", "Копия", "Скрытая копия"]) {
         const chip = f.prepared.root.querySelector(".composeYabble")!;
         copy.append(change === "moved" ? chip : chip.cloneNode(true));
         f.prepared.root.append(row);
-        await assert.rejects(
-          sendLetter(f.prepared, new AbortController().signal, () =>
-            assert.fail("no claim"),
-          ),
-          (error: unknown) =>
-            error instanceof EditorError &&
-            error.code === "recipients_mismatch",
-        );
-        assert.equal(f.clicked(), 0);
+        f.success();
+        await sendLetter(f.prepared, new AbortController().signal, () => {});
+        assert.equal(f.clicked(), 1);
       } finally {
         f.dom.window.close();
       }
@@ -536,7 +532,7 @@ for (const label of ["Cc", "Bcc", "Копия", "Скрытая копия"]) {
   }
 }
 
-test("Yandex hidden aria-labelledby copy widget with sibling committed chip blocks sending", async () => {
+test("Yandex hidden copy widget with sibling committed chip does not block sending", async () => {
   const f = await fixture("yandex");
   try {
     const row = document.createElement("div");
@@ -549,14 +545,9 @@ test("Yandex hidden aria-labelledby copy widget with sibling committed chip bloc
         f.prepared.root.querySelector(".composeYabble")!.cloneNode(true),
       );
     f.prepared.root.append(row);
-    await assert.rejects(
-      sendLetter(f.prepared, new AbortController().signal, () =>
-        assert.fail("no claim"),
-      ),
-      (error: unknown) =>
-        error instanceof EditorError && error.code === "recipients_mismatch",
-    );
-    assert.equal(f.clicked(), 0);
+    f.success();
+    await sendLetter(f.prepared, new AbortController().signal, () => {});
+    assert.equal(f.clicked(), 1);
   } finally {
     f.dom.window.close();
   }

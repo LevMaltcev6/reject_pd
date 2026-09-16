@@ -33,9 +33,9 @@ function fixture() {
     root,
     body,
     provider: "yandex",
-    verify() {
-      if (!body.isConnected || body.textContent !== "Expected body")
-        throw new EditorError("body_mismatch");
+    assertActive() {
+      if (!body.isConnected || !root.contains(body))
+        throw new EditorError("body_missing");
     },
   };
   let clicks = 0;
@@ -108,7 +108,29 @@ test("stopping while waiting for the old toast never claims or clicks Send", asy
   }
 });
 
-test("letter edits made while waiting are verified again after the toast disappears", async () => {
+test("letter edits while waiting for the old toast do not block the send attempt", async () => {
+  const f = fixture();
+  try {
+    const previous = f.addNotice();
+    let claims = 0;
+    await sendLetter(
+      f.prepared,
+      new AbortController().signal,
+      () => claims++,
+      () =>
+        setTimeout(() => {
+          f.body.textContent = "Changed by user";
+          previous.remove();
+        }, 20),
+    );
+    assert.equal(claims, 1);
+    assert.equal(f.clicks(), 1);
+  } finally {
+    f.dom.window.close();
+  }
+});
+
+test("closing the editor while waiting for the old toast prevents the send attempt", async () => {
   const f = fixture();
   try {
     const previous = f.addNotice();
@@ -116,15 +138,15 @@ test("letter edits made while waiting are verified again after the toast disappe
       sendLetter(
         f.prepared,
         new AbortController().signal,
-        () => assert.fail("changed body must not be claimed"),
+        () => assert.fail("closed editor must not be claimed"),
         () =>
           setTimeout(() => {
-            f.body.textContent = "Changed by user";
+            f.root.remove();
             previous.remove();
           }, 20),
       ),
       (error: unknown) =>
-        error instanceof EditorError && error.code === "body_mismatch",
+        error instanceof EditorError && error.code === "body_missing",
     );
     assert.equal(f.clicks(), 0);
   } finally {

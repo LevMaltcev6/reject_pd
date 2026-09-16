@@ -9,7 +9,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ПАО «МТС»",
+      "inn": "7740000076",
+      "ogrn": "1027700149124"
     },
     {
       "id": "4a4f5f0c3bc8",
@@ -20,7 +23,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ООО «Окко»",
+      "inn": "7814665871",
+      "ogrn": "1167847381130"
     },
     {
       "id": "e47da5c37812",
@@ -32,7 +38,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ООО «Екатеринбург Яблоко»",
+      "inn": "6670381056",
+      "ogrn": "1126670019585"
     },
     {
       "id": "1b2d16c4e3db",
@@ -43,7 +52,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "В электронном письме прописать: \"В пункте 11 Заключительные положения ПОЛИТИКИ в отношении обработки персональных данных в ООО «Сбербанк-Телеком» в контактной информации указаны два вида связи, а именно: электронная почта и почтовый адрес.\n\n«Любые обращения, касающиеся обработки ПДн, направляются Обществу на электронную почту: privacy@sberbank-tele.com, либо на почтовый адрес: 117997, г. Москва, ул. Вавилова, д. 19».\n\nПрошу рассмотреть моё обращение в электронном виде\".   К письму приложить PDF файл с отзывом согласия.",
       "special": "pdf",
-      "withdrawalExtra": "В пункте 11 Заключительные положения ПОЛИТИКИ в отношении обработки персональных данных в ООО «Сбербанк-Телеком» в контактной информации указаны два вида связи, а именно: электронная почта и почтовый адрес.\n\n«Любые обращения, касающиеся обработки ПДн, направляются Обществу на электронную почту: privacy@sberbank-tele.com, либо на почтовый адрес: 117997, г. Москва, ул. Вавилова, д. 19».\n\nПрошу рассмотреть моё обращение в электронном виде"
+      "withdrawalExtra": "В пункте 11 Заключительные положения ПОЛИТИКИ в отношении обработки персональных данных в ООО «Сбербанк-Телеком» в контактной информации указаны два вида связи, а именно: электронная почта и почтовый адрес.\n\n«Любые обращения, касающиеся обработки ПДн, направляются Обществу на электронную почту: privacy@sberbank-tele.com, либо на почтовый адрес: 117997, г. Москва, ул. Вавилова, д. 19».\n\nПрошу рассмотреть моё обращение в электронном виде",
+      "legalName": "ООО «Сбербанк-Телеком»",
+      "inn": "7736264044",
+      "ogrn": "1167746305430"
     },
     {
       "id": "9b818ab53240",
@@ -54,7 +66,10 @@
       "sourceStatus": "Нет ответа, запрос отправлен",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ООО «БИЗОН»",
+      "inn": "9701036178",
+      "ogrn": "1167746317210"
     },
     {
       "id": "acda9a9c5fb4",
@@ -65,7 +80,10 @@
       "sourceStatus": "Нет ответа, запрос отправлен",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ПАО «ВымпелКом»",
+      "inn": "7713076301",
+      "ogrn": "1027700166636"
     },
     {
       "id": "37df0db92f3a",
@@ -76,7 +94,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ООО «СДЭК-Глобал»",
+      "inn": "7722327689",
+      "ogrn": "1157746448463"
     },
     {
       "id": "85099762b60b",
@@ -87,7 +108,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ООО «Компания «Тензор»",
+      "inn": "7605016030",
+      "ogrn": "1027600787994"
     },
     {
       "id": "2dd67355ac40",
@@ -98,7 +122,10 @@
       "sourceStatus": "Нет ответа, запрос отправлен",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ООО «Такском»",
+      "inn": "7704211201",
+      "ogrn": "1027700071530"
     },
     {
       "id": "204ddb8a15ea",
@@ -109,7 +136,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ООО «БАНК ТОЧКА»",
+      "inn": "9705120864",
+      "ogrn": "1187746637143"
     },
     {
       "id": "d6e05ed3eb65",
@@ -120,7 +150,10 @@
       "sourceStatus": "Нет ответа, запрос отправлен",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ПАО «Магнит»",
+      "inn": "2309085638",
+      "ogrn": "1032304945947"
     },
     {
       "id": "784090cbcdf0",
@@ -132,7 +165,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ООО «Инстамарт Сервис»",
+      "inn": "9705118142",
+      "ogrn": "1187746494980"
     },
     {
       "id": "bf0d255c8484",
@@ -143,7 +179,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ООО «Лучи Здоровье»",
+      "inn": "7106021081",
+      "ogrn": "1157154006767"
     },
     {
       "id": "183e7e526673",
@@ -154,7 +193,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ПАО «ПИК СЗ»",
+      "inn": "7713011336",
+      "ogrn": "1027739137084"
     },
     {
       "id": "44327d5e3d30",
@@ -165,7 +207,10 @@
       "sourceStatus": "Нет ответа, запрос отправлен",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ООО «ДИДЖИ ТЕХ»",
+      "inn": "6679126050",
+      "ogrn": "1196658045055"
     },
     {
       "id": "8035f16c937b",
@@ -176,7 +221,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ООО «Умный ритейл»",
+      "inn": "7811554010",
+      "ogrn": "1137847232852"
     },
     {
       "id": "67a9b1e7bda3",
@@ -187,7 +235,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ООО «РусБИТех-Астра»",
+      "inn": "7726388700",
+      "ogrn": "5167746207459"
     },
     {
       "id": "dbd27579debe",
@@ -198,7 +249,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ПАО «ГК «Самолет»",
+      "inn": "9731004688",
+      "ogrn": "1187746590283"
     },
     {
       "id": "256425cd2755",
@@ -209,7 +263,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "АО «Банк ДОМ.РФ»",
+      "inn": "7725038124",
+      "ogrn": "1037739527077"
     },
     {
       "id": "ecfab97afc0e",
@@ -220,7 +277,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "КБ «Ренессанс Кредит» (ООО)",
+      "inn": "7744000126",
+      "ogrn": "1027739586291"
     },
     {
       "id": "075c8ff89799",
@@ -231,7 +291,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ООО «Купишуз»",
+      "inn": "7705935687",
+      "ogrn": "5107746007628"
     },
     {
       "id": "d13adb34b27c",
@@ -242,7 +305,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "Просят ручную подпись. Необходимо распечатать готовый бланк и заполнить от руки.",
       "special": "signature",
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "АО «ПФ СКБ Контур»",
+      "inn": "6663003127",
+      "ogrn": "1026605606620"
     },
     {
       "id": "e363466a89ca",
@@ -253,7 +319,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ООО «СВ Ритейл»",
+      "inn": "7716918034",
+      "ogrn": "1187746709677"
     },
     {
       "id": "6cfdaac7b52a",
@@ -264,7 +333,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "АО «ЛАНИТ»",
+      "inn": "7727004113",
+      "ogrn": "1027739031572"
     },
     {
       "id": "97aaf5fdf152",
@@ -275,7 +347,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ПАО «Ростелеком»",
+      "inn": "7707049388",
+      "ogrn": "1027700198767"
     },
     {
       "id": "51d96642af56",
@@ -286,7 +361,10 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ООО «СберТройка»",
+      "inn": "9702027017",
+      "ogrn": "1207700477820"
     },
     {
       "id": "1c737c6ba00d",
@@ -297,7 +375,333 @@
       "sourceStatus": "Ответ получен, ПД удалены",
       "notes": "",
       "special": null,
-      "withdrawalExtra": ""
+      "withdrawalExtra": "",
+      "legalName": "ПАО «Сбербанк России»",
+      "inn": "7707083893",
+      "ogrn": "1027700132195"
+    },
+    {
+      "id": "a8fb5d5d06c9",
+      "name": "АО «БАРС Груп»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "АО «БАРС Груп»",
+      "inn": "1655251590",
+      "ogrn": "1121690063923",
+      "emails": [
+        "bars@bars.group"
+      ]
+    },
+    {
+      "id": "fac3c205270d",
+      "name": "АО «Айсорс»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "АО «Айсорс»",
+      "inn": "9706009675",
+      "ogrn": "1207700393977",
+      "emails": [
+        "support@isource.ru"
+      ]
+    },
+    {
+      "id": "0fb2ea150de4",
+      "name": "ПАО «Софтлайн»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "ПАО «Софтлайн»",
+      "inn": "7736227885",
+      "ogrn": "1027736009333",
+      "emails": [
+        "info@softline.ru"
+      ]
+    },
+    {
+      "id": "93d11b902057",
+      "name": "«Новый Ай Ти Проект»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "«Новый Ай Ти Проект»",
+      "inn": "7724338125",
+      "ogrn": "1157746958830",
+      "emails": [
+        "3L@3L.ru",
+        "rma@3L.ru"
+      ]
+    },
+    {
+      "id": "102dfee06312",
+      "name": "ООО «Облачные технологии»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "ООО «Облачные технологии»",
+      "inn": "7736279160",
+      "ogrn": "5167746080057",
+      "emails": [
+        "security@cloud.ru"
+      ]
+    },
+    {
+      "id": "d659759d7c9b",
+      "name": "АО «Лаборатория Касперского»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "АО «Лаборатория Касперского»",
+      "inn": "7713140469",
+      "ogrn": "1027739867473",
+      "emails": [
+        "info@kaspersky.com"
+      ]
+    },
+    {
+      "id": "7c9eb642f593",
+      "name": "ООО «Рубитех»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "ООО «Рубитех»",
+      "inn": "7702404085",
+      "ogrn": "1167746693784",
+      "emails": [
+        "info@rubytech.ru"
+      ]
+    },
+    {
+      "id": "f85211ee5736",
+      "name": "АО «ТБанк»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "АО «ТБанк»",
+      "inn": "7710140679",
+      "ogrn": "1027739642281",
+      "emails": [
+        "deposit@tbank.ru"
+      ]
+    },
+    {
+      "id": "5dda21bcc380",
+      "name": "АО «Ай-Теко»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "АО «Ай-Теко»",
+      "inn": "7704160892",
+      "ogrn": "1027700031061",
+      "emails": [
+        "income@i-teco.ru"
+      ]
+    },
+    {
+      "id": "302886347af0",
+      "name": "«ИТ ИКС 5 Технологии»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "«ИТ ИКС 5 Технологии»",
+      "inn": "1615014289",
+      "ogrn": "1181690101911",
+      "emails": [
+        "pdn@x5.ru"
+      ]
+    },
+    {
+      "id": "a9e445367d12",
+      "name": "ООО «ЛУКОЙЛ-Технологии»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "ООО «ЛУКОЙЛ-Технологии»",
+      "inn": "9709038314",
+      "ogrn": "1187746909129",
+      "emails": [
+        "luktech@lukoil.com"
+      ]
+    },
+    {
+      "id": "b9edc839a2ae",
+      "name": "ПАО «БАНК УРАЛСИБ»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "ПАО «БАНК УРАЛСИБ»",
+      "inn": "0274062111",
+      "ogrn": "1020280000190",
+      "emails": [
+        "infsec@uralsib.ru"
+      ]
+    },
+    {
+      "id": "cd7faa2d1d77",
+      "name": "ПАО «МТС-Банк»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "ПАО «МТС-Банк»",
+      "inn": "7702045051",
+      "ogrn": "1027739053704",
+      "emails": [
+        "info@mtsbank.ru"
+      ]
+    },
+    {
+      "id": "64f89a333338",
+      "name": "ООО «Авито Тех»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "ООО «Авито Тех»",
+      "inn": "9710089440",
+      "ogrn": "1217700216403",
+      "emails": [
+        "tech@avito.ru"
+      ]
+    },
+    {
+      "id": "87387cbbf569",
+      "name": "АО «Россельхозбанк»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "АО «Россельхозбанк»",
+      "inn": "7725114488",
+      "ogrn": "1027700342890",
+      "emails": [
+        "office@rshb.ru"
+      ]
+    },
+    {
+      "id": "a339794270f5",
+      "name": "«ВК Цифровые Технологии»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "«ВК Цифровые Технологии»",
+      "inn": "7714415613",
+      "ogrn": "5177746017158",
+      "emails": [
+        "digital.tech@corp.mail.ru"
+      ]
+    },
+    {
+      "id": "6505b3009112",
+      "name": "ООО «ЛОЦИЯ»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "ООО «ЛОЦИЯ»",
+      "inn": "9731028047",
+      "ogrn": "1197746102388",
+      "emails": [
+        "cs@loodsen.ru"
+      ]
+    },
+    {
+      "id": "4dd283e53237",
+      "name": "ООО «Аренадата Софтвер»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "ООО «Аренадата Софтвер»",
+      "inn": "7713468845",
+      "ogrn": "1197746413160",
+      "emails": [
+        "info@arenadata.io"
+      ]
+    },
+    {
+      "id": "2c4b0ea41284",
+      "name": "«ГК «Иннотех»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "«ГК «Иннотех»",
+      "inn": "9703073496",
+      "ogrn": "1227700086460",
+      "emails": [
+        "dpo@inno.tech"
+      ]
+    },
+    {
+      "id": "37fe40eb2a72",
+      "name": "АО «ОТП Банк»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "АО «ОТП Банк»",
+      "inn": "7708001614",
+      "ogrn": "1027739176563",
+      "emails": [
+        "spravka@otpbank.ru"
+      ]
+    },
+    {
+      "id": "8a6ab74549a6",
+      "name": "ПАО «Интер РАО»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "ПАО «Интер РАО»",
+      "inn": "2320109650",
+      "ogrn": "1022302933630",
+      "emails": [
+        "office@interrao.ru"
+      ]
+    },
+    {
+      "id": "209f19a16f49",
+      "name": "ООО «Астон»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "ООО «Астон»",
+      "inn": "9715350151",
+      "ogrn": "1197746397045",
+      "emails": [
+        "info@astondevs.ru"
+      ]
+    },
+    {
+      "id": "cbb0dbe7c3ef",
+      "name": "ООО «ЕГАР Технологии»",
+      "sourceStatus": "",
+      "notes": "",
+      "special": null,
+      "withdrawalExtra": "",
+      "legalName": "ООО «ЕГАР Технологии»",
+      "inn": "9718022825",
+      "ogrn": "1167746777868",
+      "emails": [
+        "info@egartech.ru"
+      ]
     }
   ],
   "templates": {
@@ -314,6 +718,10 @@
     {
       "file": "Список компаний для отзыва ПД.xlsx",
       "sha256": "fc88d94ce2c2316993d915178a1a3aeabe2691ae10f60cb023d52a83b50099dd"
+    },
+    {
+      "file": "реквизиты.xlsx",
+      "sha256": "4273ff4347d3e3d962de2715bda330fe8f32c878338479f67ec241430d76e12a"
     },
     {
       "file": "Шаблон отзыва ПД универсальный.docx",

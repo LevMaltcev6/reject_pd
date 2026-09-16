@@ -75,7 +75,7 @@ export function yandexAccount(doc: Document, url: URL): Account | null {
 /** Deliberately no attribute values, cookies, message text or account identifiers. */
 export function yandexDiagnostics(doc: Document) {
   return {
-    version: "0.2.8",
+    version: "0.2.10",
     controls: [...doc.querySelectorAll(controls)].map((el) => ({
       tag: el.tagName,
       active: active(el, doc),

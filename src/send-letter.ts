@@ -196,12 +196,12 @@ async function waitForPreviousYandexNotice(
   }
   while (pending()) {
     signal.throwIfAborted();
-    prepared.verify();
+    prepared.assertActive();
     if (Date.now() >= deadline) throw new SendError("previous_notice_timeout");
     await new Promise((resolve) => setTimeout(resolve, 150));
   }
   signal.throwIfAborted();
-  prepared.verify();
+  prepared.assertActive();
 }
 
 export async function sendLetter(
@@ -215,7 +215,7 @@ export async function sendLetter(
   try {
     signal.throwIfAborted();
     if (attempted.has(prepared)) throw new SendError("already_attempted");
-    prepared.verify();
+    prepared.assertActive();
     // Live Yandex reuses/suppresses an identical MessageSent toast while the
     // preceding item is mounted. Wait through its fade-out before the next
     // click, so this send can produce its own observable acknowledgement.
@@ -224,7 +224,7 @@ export async function sendLetter(
     let button: HTMLElement | null = null;
     while (!(button = sendButton(prepared))) {
       signal.throwIfAborted();
-      prepared.verify();
+      prepared.assertActive();
       if (Date.now() >= deadline) throw new SendError("button_missing");
       await new Promise((resolve) => setTimeout(resolve, 150));
     }
@@ -291,8 +291,8 @@ export async function sendLetter(
       attributeFilter: ["hidden", "aria-hidden", "style", "class"],
     });
     signal.throwIfAborted();
-    prepared.verify();
-    // Resolve again after verification: the selected node may have been replaced.
+    prepared.assertActive();
+    // Resolve again after the activity check: the selected node may have been replaced.
     const ready = sendButton(prepared);
     if (ready !== button) throw new SendError("button_missing");
     claimed = true;

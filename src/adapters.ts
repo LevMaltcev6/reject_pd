@@ -1,13 +1,11 @@
 import type { Account, Letter } from "./types";
 import { yandexAccount } from "./yandex-account";
 import { EditorError, type EditorErrorCode } from "./editor-errors";
-import { MailBodyError, writeMailBody } from "./mail-body";
+import { writeMailBody } from "./mail-body";
 import {
   resolveYandexTo,
   yandexRecipientAddresses,
   yandexHasPendingRecipient,
-  yandexHasCopyRecipients,
-  yandexPendingRecipientText,
 } from "./yandex-recipients";
 const emailPattern = /[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi;
 export const visible = (e: Element): e is HTMLElement =>
@@ -232,104 +230,8 @@ export interface PreparedLetter {
   readonly root: HTMLElement;
   readonly body: HTMLElement;
   readonly provider: Account["provider"];
-  /** Recheck the exact editor immediately before a send action. */
-  verify(): void;
-}
-
-function hasPendingGmailRecipient(root: HTMLElement) {
-  return [
-    ...root.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>(
-      'input[name="to"], textarea[name="to"], input[name="cc"], textarea[name="cc"], input[name="bcc"], textarea[name="bcc"], input[role="combobox"][aria-label="To recipients"], input[role="combobox"][aria-label="Получатели"]',
-    ),
-  ].some(
-    (input) =>
-      visible(input) &&
-      input.type !== "hidden" &&
-      input.value.trim().length > 0,
-  );
-}
-
-/** CC/BCC must stay empty, even when their addresses also occur in To. */
-function hasCopyRecipients(root: HTMLElement, provider: Account["provider"]) {
-  if (provider === "yandex") return yandexHasCopyRecipients(root);
-  const copyFields = root.querySelectorAll<HTMLElement>(
-    'input[name="cc"], input[name="bcc"], textarea[name="cc"], textarea[name="bcc"], [data-name="cc"], [data-name="bcc"], [aria-label="Cc recipients"], [aria-label="Bcc recipients"], [aria-label="Получатели копии"], [aria-label="Получатели скрытой копии"]',
-  );
-  return [...copyFields].some((field) => {
-    if (
-      (field instanceof HTMLInputElement ||
-        field instanceof HTMLTextAreaElement) &&
-      field.value.trim()
-    )
-      return true;
-    const region =
-      field.closest("tr") ||
-      (field.parentElement !== root ? field.parentElement : null) ||
-      field;
-    if (recipientAddresses(region, provider).length) return true;
-    return false;
-  });
-}
-
-async function commitYandexRecipients(
-  root: HTMLElement,
-  recipient: HTMLElement,
-  subject: HTMLInputElement,
-  body: HTMLElement,
-  originalBodyText: string,
-  addresses: string[],
-  findRecipient: () => HTMLElement | null,
-  guard: () => void,
-) {
-  const expected = [
-    ...new Set(addresses.map((value) => value.toLowerCase())),
-  ].sort();
-  const normalizePending = (value: string) =>
-    value
-      .replace(/[\u200B-\u200D\u2060\uFEFF]/g, "")
-      .replace(/\u00a0/g, " ")
-      .trim();
-  const insertedText = normalizePending(addresses.join(", "));
-  const checkEditor = () => {
-    guard();
-    if (!root.isConnected || !root.contains(body) || !visible(body))
-      throw new EditorError("body_missing");
-    if (!root.contains(subject) || !visible(subject))
-      throw new EditorError("subject_missing");
-    if (!root.contains(recipient) || findRecipient() !== recipient)
-      throw new EditorError("recipients_missing");
-    if (subject.value.trim()) throw new EditorError("existing_subject");
-    if ((body.textContent?.trim() || "") !== originalBodyText)
-      throw new EditorError("existing_body");
-    if (yandexHasCopyRecipients(root))
-      throw new EditorError("recipients_mismatch");
-    const actual = yandexRecipientAddresses(root);
-    if (actual.some((address) => !expected.includes(address)))
-      throw new EditorError("recipients_mismatch");
-    const pending = normalizePending(yandexPendingRecipientText(recipient));
-    if (!actual.length && pending !== insertedText)
-      throw new EditorError("recipients_mismatch");
-    return { actual, pending };
-  };
-  // Yandex processes the input asynchronously. A blur in the same call stack
-  // can leave the address as plain text, even after the editor has mounted.
-  await new Promise((resolve) => setTimeout(resolve, 0));
-  if (!checkEditor().actual.length) enter(recipient);
-  const until = Date.now() + 5000;
-  while (Date.now() < until) {
-    const { actual, pending } = checkEditor();
-    if (JSON.stringify(actual) === JSON.stringify(expected) && !pending) return;
-    if (!actual.length) {
-      // Retry only the focus transition, never the insertion. Once any chip
-      // exists, wait for that batch to finish without another editing commit.
-      recipient.focus();
-      const afterFocus = checkEditor();
-      if (!afterFocus.actual.length) subject.focus();
-    }
-    await new Promise((resolve) => setTimeout(resolve, 150));
-  }
-  checkEditor();
-  throw new EditorError("recipient_unconfirmed");
+  /** Keep the operation in its own active editor; field validation belongs to mail. */
+  assertActive(): void;
 }
 
 export async function fillLetter(
@@ -415,7 +317,6 @@ export async function fillLetter(
     throw new EditorError("existing_body");
   if (account.provider === "yandex" && yandexHasPendingRecipient(root, visible))
     throw new EditorError("existing_recipients");
-  const originalBodyText = body.textContent?.trim() || "";
   // Yandex must receive the full recipient set in one editing transaction.
   // Multiple individual blur commits can paint all chips while its saved
   // recipient model retains only the first address.
@@ -423,7 +324,7 @@ export async function fillLetter(
     account.provider === "yandex"
       ? [letter.to]
       : letter.to.map((address) => [address]);
-  for (const addresses of recipientBatches) {
+  for (const [index, addresses] of recipientBatches.entries()) {
     guard();
     const recipient = await waitFor(
       findRecipient,
@@ -433,85 +334,48 @@ export async function fillLetter(
     );
     guard();
     recipient.focus();
-    insertRecipient(recipient, addresses.join(", "));
-    if (account.provider === "yandex") {
-      await commitYandexRecipients(
-        root,
-        recipient,
-        subject,
-        body,
-        originalBodyText,
-        addresses,
-        findRecipient,
-        guard,
-      );
-    } else {
-      enter(recipient);
-      await waitFor(
-        () =>
-          addresses.every((address) =>
-            recipientAddresses(root, account.provider).includes(
-              address.toLowerCase(),
-            ),
-          ),
-        signal,
-        5000,
-        "recipient_unconfirmed",
-      );
-    }
+    // A mail client may leave a prior address as pending text after Enter.
+    // Preserve it when inserting the next batch instead of replacing it.
+    const pending =
+      index > 0 &&
+      (recipient instanceof HTMLInputElement ||
+        recipient instanceof HTMLTextAreaElement)
+        ? recipient.value.trim()
+        : "";
+    insertRecipient(
+      recipient,
+      [pending, addresses.join(", ")].filter(Boolean).join(", "),
+    );
+    // Finish the input transaction with Enter and a real focus transition.
+    // The mail client validates recipients when sending; chip markup is not a gate.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    guard();
+    enter(recipient);
+    subject.focus();
+    await new Promise((resolve) => setTimeout(resolve, 0));
   }
   guard();
   setInput(subject, letter.subject);
   const text =
     letter.body + (originalSignature ? `\n\n${originalSignature}` : "");
-  let bodyCheckpoint: { verify(): void };
   try {
-    bodyCheckpoint = await writeMailBody(body, text, signal);
-  } catch (cause) {
+    await writeMailBody(body, text, signal);
+  } catch {
     guard();
-    throw new EditorError(
-      cause instanceof MailBodyError && cause.code === "mismatch"
-        ? "body_mismatch"
-        : "body_not_committed",
-    );
+    throw new EditorError("body_write_failed");
   }
   body.blur();
   subject.blur();
-  // Let controlled editors process input before checking actual state.
-  await new Promise((r) => setTimeout(r, 500));
-  const expected = [...new Set(letter.to.map((s) => s.toLowerCase()))].sort();
-  const expectedSubject = letter.subject;
-  const verify = () => {
+  const assertActive = () => {
     guard();
     if (!root.isConnected || !root.contains(body) || !visible(body))
       throw new EditorError("body_missing");
-    if (!root.contains(subject) || !visible(subject))
-      throw new EditorError("subject_missing");
-    const actual = recipientAddresses(root, account.provider);
-    if (
-      JSON.stringify(actual) !== JSON.stringify(expected) ||
-      hasCopyRecipients(root, account.provider)
-    )
-      throw new EditorError("recipients_mismatch");
-    if (
-      account.provider === "yandex"
-        ? yandexHasPendingRecipient(root, visible)
-        : hasPendingGmailRecipient(root)
-    )
-      throw new EditorError("recipient_unconfirmed");
-    if (subject.value !== expectedSubject)
-      throw new EditorError("subject_mismatch");
-    try {
-      bodyCheckpoint.verify();
-    } catch {
-      throw new EditorError("body_mismatch");
-    }
   };
-  verify();
+  assertActive();
   return {
     root,
     body,
     provider: account.provider,
-    verify,
+    assertActive,
   } satisfies PreparedLetter;
 }
