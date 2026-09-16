@@ -59,8 +59,24 @@ function rejectedByYandex(failure: YandexSendFailure) {
         : "";
   const code = failure.code ? `Код: ${failure.code}.` : "";
   const http = failure.httpStatus ? `HTTP ${failure.httpStatus}.` : "";
+  const fieldValue = (value: string | null) =>
+    value === null ? "не передан" : value ? `«${value}»` : "пустой";
+  const sender = failure.sender
+    ? [
+        `Адрес отправителя в запросе: ${fieldValue(failure.sender.fromMailbox)}.`,
+        `Тип отправителя: ${fieldValue(failure.sender.sendType)}.`,
+        failure.sender.uidMatchesPage === false
+          ? "Аккаунт в запросе (_uid) не совпадает с аккаунтом в адресе вкладки (uid)."
+          : "",
+        failure.sender.mailboxUidFieldsMatch === false
+          ? "Параметры ящика _mailboxUid и mailboxUid не совпадают."
+          : "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+    : "";
   return new SendRejectedError(
-    ["Яндекс сообщил об ошибке отправки:", reason, code, http]
+    ["Яндекс сообщил об ошибке отправки:", reason, code, http, sender]
       .filter(Boolean)
       .join(" "),
     failure.code,

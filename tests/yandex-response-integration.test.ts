@@ -9,10 +9,10 @@ import {
   sendLetter,
 } from "../src/send-letter";
 
-function fixture(reply: unknown) {
+function fixture(reply: unknown, requestBody?: string) {
   const dom = new JSDOM(
     '<div class="composeReact"><div contenteditable="true">Текст письма</div><button>Отправить</button></div>',
-    { url: "https://mail.yandex.ru/" },
+    { url: "https://mail.yandex.ru/?uid=account-1" },
   );
   const w = dom.window;
   for (const key of ["document", "HTMLElement", "getComputedStyle"] as const)
@@ -43,7 +43,10 @@ function fixture(reply: unknown) {
     // Simulate only the mail provider's HTTP response. This tests error reporting,
     // not the underlying cause of a real Yandex rejection.
     pageRead = w
-      .fetch("/web-api/do-send/liza1?_send=true", { method: "POST" })
+      .fetch("/web-api/do-send/liza1?_send=true", {
+        method: "POST",
+        body: requestBody,
+      })
       .then(async (response) => {
         received = await response.json();
         if ((reply as { status?: string }).status === "ok") {
@@ -96,6 +99,73 @@ test("Yandex illegal_params is surfaced immediately and leaves its response read
         error instanceof SendError && error.code === "already_attempted",
     );
     assert.equal(f.requests(), 1);
+  } finally {
+    f.dom.window.close();
+  }
+});
+
+test("sender authentication refusal shows the actual request sender and account mismatches", async () => {
+  const f = fixture(
+    {
+      status: "error",
+      error: "illegal_params",
+      message: "failed to auth sender",
+    },
+    new URLSearchParams({
+      from_mailbox: "actual-sender@yandex.ru",
+      send_type: "native",
+      _uid: "account-2",
+      _mailboxUid: "mailbox-1",
+      mailboxUid: "mailbox-2",
+      message: "Направить ответ на почту: reply-address@gmail.com",
+      _ckey: "secret-token",
+    }).toString(),
+  );
+  try {
+    await assert.rejects(f.send(), (error: unknown) => {
+      assert.ok(error instanceof SendRejectedError);
+      assert.equal(error.code, "illegal_params");
+      assert.match(error.message, /failed to auth sender/);
+      assert.match(
+        error.message,
+        /Адрес отправителя в запросе: «actual-sender@yandex.ru»/,
+      );
+      assert.match(error.message, /Тип отправителя: «native»/);
+      assert.match(error.message, /Аккаунт в запросе \(_uid\) не совпадает/);
+      assert.match(
+        error.message,
+        /Параметры ящика _mailboxUid и mailboxUid не совпадают/,
+      );
+      assert.doesNotMatch(
+        error.message,
+        /reply-address|secret-token|account-2|mailbox-2/,
+      );
+      return true;
+    });
+    assert.equal(f.requests(), 1);
+    assert.equal(f.dom.window.fetch, f.originalFetch);
+  } finally {
+    f.dom.window.close();
+  }
+});
+
+test("sender diagnostics distinguish an empty sender from an absent sender type", async () => {
+  const f = fixture(
+    {
+      status: "error",
+      error: "illegal_params",
+      message: "failed to auth sender",
+    },
+    "from_mailbox=&_uid=account-1",
+  );
+  try {
+    await assert.rejects(f.send(), (error: unknown) => {
+      assert.ok(error instanceof SendRejectedError);
+      assert.match(error.message, /Адрес отправителя в запросе: пустой/);
+      assert.match(error.message, /Тип отправителя: не передан/);
+      assert.doesNotMatch(error.message, /не совпада/);
+      return true;
+    });
   } finally {
     f.dom.window.close();
   }

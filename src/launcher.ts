@@ -19,7 +19,7 @@ export function createLauncher(
     "button{font:14px system-ui;cursor:pointer;background:#204c3c;color:white;border:1px solid #93b6a3;border-radius:9px;padding:12px 16px;box-shadow:0 4px 20px #0003}button:focus-visible{outline:3px solid #9bd6b9}p{font:13px/1.5 system-ui;max-width:320px;padding:12px;background:white;color:#8d2929;border:1px solid #d6b3b3;border-radius:8px}[hidden]{display:none!important}";
   const trigger = doc.createElement("button");
   trigger.type = "button";
-  const label = "↗ Обращения по ПД · 0.2.13";
+  const label = "↗ Обращения по ПД · 0.2.14";
   trigger.textContent = label;
   const failure = doc.createElement("p");
   failure.hidden = true;
@@ -93,7 +93,7 @@ export function createLauncher(
   // A missing menu API must not remove the on-page button.
   try {
     GM_registerMenuCommand(
-      "Обращения по ПД · 0.2.13 — открыть",
+      "Обращения по ПД · 0.2.14 — открыть",
       () => void open(),
     );
   } catch {

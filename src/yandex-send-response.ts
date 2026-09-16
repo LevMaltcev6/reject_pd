@@ -2,6 +2,12 @@ export interface YandexSendFailure {
   code?: string;
   message?: string;
   httpStatus?: number;
+  sender?: {
+    fromMailbox: string | null;
+    sendType: string | null;
+    uidMatchesPage?: boolean;
+    mailboxUidFieldsMatch?: boolean;
+  };
 }
 
 export interface YandexSendResponseObserver {
@@ -84,7 +90,7 @@ function isSendRequest(
   init?: RequestInit,
 ): boolean {
   try {
-    // No request body, headers, or credentials are inspected or retained.
+    // Match the endpoint without inspecting headers or credentials.
     const request =
       typeof input === "object" && "url" in input ? input : undefined;
     const address = request ? request.url : String(input);
@@ -99,6 +105,51 @@ function isSendRequest(
     );
   } catch {
     return false;
+  }
+}
+
+function senderDiagnostics(
+  doc: Document,
+  init?: RequestInit,
+): YandexSendFailure["sender"] {
+  try {
+    const body = init?.body;
+    let fields: URLSearchParams;
+    if (typeof body === "string") fields = new URLSearchParams(body);
+    else if (
+      body &&
+      Object.prototype.toString.call(body) === "[object URLSearchParams]"
+    )
+      fields = body as URLSearchParams;
+    else return;
+    // Unknown body formats are not read through a Request or stream. Only the
+    // known form's sender fields survive this synchronous extraction.
+    if (
+      !["from_mailbox", "send_type", "_uid", "_mailboxUid", "mailboxUid"].some(
+        (key) => fields.has(key),
+      )
+    )
+      return;
+    const plain = (key: string, limit: number) => {
+      const value = fields.get(key);
+      return value === null
+        ? null
+        : (responseText(value) || "").slice(0, limit);
+    };
+    const sender: NonNullable<YandexSendFailure["sender"]> = {
+      fromMailbox: plain("from_mailbox", 256),
+      sendType: plain("send_type", 64),
+    };
+    const uid = fields.get("_uid");
+    const pageUid = new URL(doc.location.href).searchParams.get("uid");
+    if (uid && pageUid) sender.uidMatchesPage = uid === pageUid;
+    const mailboxUid = fields.get("mailboxUid");
+    const prefixedMailboxUid = fields.get("_mailboxUid");
+    if (mailboxUid && prefixedMailboxUid)
+      sender.mailboxUidFieldsMatch = mailboxUid === prefixedMailboxUid;
+    return sender;
+  } catch {
+    return;
   }
 }
 
@@ -142,6 +193,7 @@ export function observeYandexSendResponse(
               isSendRequest(doc, ...args)
             ) {
               captured = true;
+              const sender = senderDiagnostics(doc, args[1]);
               // Return the original promise below; our branch only reads a clone.
               void result
                 .then(async (response) => {
@@ -154,6 +206,12 @@ export function observeYandexSendResponse(
                     // A malformed/unreadable response cannot establish rejection.
                   }
                   const observed = failureFromResponse(data, response.status);
+                  if (
+                    observed?.message &&
+                    /\bfailed to auth sender\b/i.test(observed.message) &&
+                    sender
+                  )
+                    observed.sender = sender;
                   if (active && generation === token) failure = observed;
                 })
                 .catch(() => {
@@ -184,7 +242,12 @@ export function observeYandexSendResponse(
       }
     },
     getFailure() {
-      return failure ? { ...failure } : undefined;
+      return failure
+        ? {
+            ...failure,
+            ...(failure.sender ? { sender: { ...failure.sender } } : {}),
+          }
+        : undefined;
     },
     stop() {
       active = false;

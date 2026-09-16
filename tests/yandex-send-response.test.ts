@@ -24,6 +24,7 @@ function fixture(fetch: typeof globalThis.fetch) {
   });
   return {
     page,
+    window: dom.window,
     observer: observeYandexSendResponse(page.document),
     close: () => dom.window.close(),
   };
@@ -288,4 +289,177 @@ test("uses the page's unsafeWindow API when the userscript window has a differen
   await settled();
   assert.equal(isolated.observer.getFailure()?.code, "illegal_params");
   isolated.observer.stop();
+});
+
+test("sender authentication errors retain only bounded sender fields and identifier comparisons", async (t) => {
+  const response = json({
+    status: "error",
+    error: "illegal_params",
+    message: "failed to auth sender",
+  });
+  let actualOptions: RequestInit | undefined;
+  const f = fixture((_input, options) => {
+    actualOptions = options;
+    return Promise.resolve(response);
+  });
+  t.after(f.close);
+  f.page.history.replaceState(null, "", "/?uid=account-identifier");
+  const body = new URLSearchParams({
+    from_mailbox: " sender@example.invalid ",
+    send_type: " collector-ext ",
+    _uid: "account-identifier",
+    _mailboxUid: "shared-mailbox-identifier",
+    mailboxUid: "shared-mailbox-identifier",
+    _ckey: "private-credential",
+    from_name: "Private Sender Name",
+    to: "private-recipient@example.invalid",
+    subj: "Private subject",
+    send: "Private letter text",
+  }).toString();
+  const options = { method: "POST", body };
+  f.observer.start();
+  await f.page.fetch(sendUrl, options);
+  await settled();
+  assert.equal(actualOptions, options);
+  assert.equal(actualOptions?.body, body);
+  assert.equal(response.bodyUsed, false);
+  assert.deepEqual(f.observer.getFailure(), {
+    code: "illegal_params",
+    message: "failed to auth sender",
+    sender: {
+      fromMailbox: "sender@example.invalid",
+      sendType: "collector-ext",
+      uidMatchesPage: true,
+      mailboxUidFieldsMatch: true,
+    },
+  });
+  const failure = f.observer.getFailure()!;
+  failure.sender!.fromMailbox = "changed@example.invalid";
+  assert.equal(
+    f.observer.getFailure()?.sender?.fromMailbox,
+    "sender@example.invalid",
+  );
+  assert.doesNotMatch(
+    JSON.stringify(f.observer.getFailure()),
+    /private|identifier/i,
+  );
+  f.observer.stop();
+  assert.equal(f.observer.getFailure(), undefined);
+});
+
+test("sender diagnostics preserve URLSearchParams and report identifier mismatches without their values", async (t) => {
+  const f = fixture(() =>
+    Promise.resolve(
+      json({
+        status: "error",
+        error: { code: "illegal_params", message: "failed to auth sender" },
+      }),
+    ),
+  );
+  t.after(f.close);
+  f.page.history.replaceState(null, "", "/?uid=page-account");
+  // A different realm's URLSearchParams is also a supported form body.
+  const body = new f.window.URLSearchParams({
+    from_mailbox: "a".repeat(300),
+    send_type: "x".repeat(100),
+    _uid: "request-account",
+    _mailboxUid: "first-mailbox",
+    mailboxUid: "second-mailbox",
+  });
+  const original = body.toString();
+  f.observer.start();
+  await f.page.fetch(sendUrl, { method: "POST", body });
+  await settled();
+  assert.equal(body.toString(), original);
+  assert.deepEqual(f.observer.getFailure()?.sender, {
+    fromMailbox: "a".repeat(256),
+    sendType: "x".repeat(64),
+    uidMatchesPage: false,
+    mailboxUidFieldsMatch: false,
+  });
+  f.observer.stop();
+});
+
+test("missing sender values remain distinct and absent identifiers produce no comparison", async (t) => {
+  const f = fixture(() =>
+    Promise.resolve(
+      json({
+        status: "illegal_params",
+        message: "failed to auth sender",
+      }),
+    ),
+  );
+  t.after(f.close);
+  f.observer.start();
+  await f.page.fetch(sendUrl, {
+    method: "POST",
+    body: "send_type=&_uid=request-account",
+  });
+  await settled();
+  assert.deepEqual(f.observer.getFailure()?.sender, {
+    fromMailbox: null,
+    sendType: "",
+  });
+  f.observer.stop();
+});
+
+test("success and unrelated failures never expose extracted sender diagnostics", async (t) => {
+  for (const response of [
+    { status: "ok" },
+    { status: "error", message: "illegal_params" },
+    { status: "ok", error: "incorrect_to" },
+    { status: "error", message: "undo_message_saved" },
+  ]) {
+    const f = fixture(() => Promise.resolve(json(response)));
+    t.after(f.close);
+    f.observer.start();
+    await f.page.fetch(sendUrl, {
+      method: "POST",
+      body: "from_mailbox=sender%40example.invalid&send_type=native",
+    });
+    await settled();
+    assert.equal(f.observer.getFailure()?.sender, undefined);
+    assert.doesNotMatch(
+      JSON.stringify(f.observer.getFailure()) || "",
+      /sender@example/,
+    );
+    f.observer.stop();
+  }
+});
+
+test("unknown body formats and Request bodies are not consumed for sender diagnostics", async (t) => {
+  const reply = () =>
+    Promise.resolve(
+      json({
+        status: "illegal_params",
+        message: "failed to auth sender",
+      }),
+    );
+  const form = new FormData();
+  form.set("from_mailbox", "sender@example.invalid");
+  for (const body of [
+    form,
+    new Blob(["from_mailbox=sender%40example.invalid"]),
+    JSON.stringify({ from_mailbox: "sender@example.invalid" }),
+  ]) {
+    const f = fixture(reply);
+    t.after(f.close);
+    f.observer.start();
+    await f.page.fetch(sendUrl, { method: "POST", body });
+    await settled();
+    assert.equal(f.observer.getFailure()?.sender, undefined);
+    f.observer.stop();
+  }
+  const f = fixture(reply);
+  t.after(f.close);
+  const request = new Request(`https://mail.yandex.ru${sendUrl}`, {
+    method: "POST",
+    body: "from_mailbox=sender%40example.invalid&send_type=native",
+  });
+  f.observer.start();
+  await f.page.fetch(request);
+  await settled();
+  assert.equal(request.bodyUsed, false);
+  assert.equal(f.observer.getFailure()?.sender, undefined);
+  f.observer.stop();
 });
