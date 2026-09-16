@@ -621,14 +621,18 @@ async function mountPanel(onClose: () => void) {
         view = { row, badge, error: rowError, notice };
         resultRows.set(item.id, view);
       }
-      view.badge.textContent = labels[item.status];
+      view.badge.textContent = item.rejected
+        ? "Ошибка отправки"
+        : labels[item.status];
       view.error.textContent = item.error || "";
       view.error.hidden = !item.error;
-      view.notice.hidden = item.status !== "uncertain";
+      view.notice.hidden = item.status !== "uncertain" && !item.rejected;
       view.notice.textContent =
         item.status === "uncertain"
           ? "Проверьте «Отправленные» и текущий редактор. Скрипт не повторяет эту отправку: письмо уже могло уйти. Продолжение очереди обработает только оставшиеся компании."
-          : "";
+          : item.rejected
+            ? "Очередь остановлена. Автоматического повтора не будет."
+            : "";
       if (item.status === "error" && item.attempted && !queue.running) {
         if (!view.retry) {
           view.retry = button(
@@ -636,9 +640,11 @@ async function mountPanel(onClose: () => void) {
             () => {
               if (
                 window.confirm(
-                  queueDelivery === "send"
-                    ? "Проверьте «Отправленные» и прошлый черновик. Повтор создаст новое письмо и автоматически отправит его. Повторить?"
-                    : "Убедитесь, что прошлое письмо не отправлено. Повтор создаст новый черновик. Создать?",
+                  item.rejected
+                    ? "Почта сообщила об ошибке отправки. Перед повтором проверьте «Отправленные» и закройте прошлый черновик. Повтор создаст новое письмо и автоматически отправит его. Повторить?"
+                    : queueDelivery === "send"
+                      ? "Проверьте «Отправленные» и прошлый черновик. Повтор создаст новое письмо и автоматически отправит его. Повторить?"
+                      : "Убедитесь, что прошлое письмо не отправлено. Повтор создаст новый черновик. Создать?",
                 )
               ) {
                 item.attempted = false;

@@ -32,7 +32,11 @@ interface SentMessage {
 /** Real userscript UI, adapter and sending code; only the host mail UI is simulated. */
 function page(
   values = new Map<string, unknown>(),
-  options: { acknowledge?: boolean; lockAvailable?: boolean } = {},
+  options: {
+    acknowledge?: boolean;
+    lockAvailable?: boolean;
+    rejection?: string;
+  } = {},
 ) {
   const dom = new JSDOM(
     '<!doctype html><body><button class="mail-ComposeButton">Compose</button></body>',
@@ -55,6 +59,8 @@ function page(
   let maxEditors = 0;
   let confirmations = 0;
   let openedTabs = 0;
+  let providerSend = false;
+  let providerFetches = 0;
   let closed = false;
   const forbiddenOpen = () => {
     openedTabs++;
@@ -75,8 +81,18 @@ function page(
     },
     GM_openInTab: forbiddenOpen,
     open: forbiddenOpen,
-    fetch: () => {
-      throw new Error("The userscript must not transmit data through fetch");
+    fetch: (input: string, init: RequestInit) => {
+      assert.equal(
+        providerSend,
+        true,
+        "only the mail UI may issue the send request",
+      );
+      assert.equal(input, "/web-api/do-send/liza1?_send=true");
+      assert.equal(init.method, "POST");
+      providerFetches++;
+      return Promise.resolve(
+        Response.json({ status: "error", message: options.rejection }),
+      );
     },
   });
   w.HTMLElement.prototype.getClientRects = function () {
@@ -129,6 +145,12 @@ function page(
           )!.value,
           body: mailEditor.modelText(body),
         });
+        if (options.rejection) {
+          providerSend = true;
+          void w.fetch("/web-api/do-send/liza1?_send=true", { method: "POST" });
+          providerSend = false;
+          return;
+        }
         editor.remove();
         if (options.acknowledge !== false) {
           // Every send produces a new toast, even when its text is unchanged.
@@ -158,6 +180,9 @@ function page(
     },
     get openedTabs() {
       return openedTabs;
+    },
+    get providerFetches() {
+      return providerFetches;
     },
     async open() {
       const launcher = w.document.getElementById("return-pd-launcher");
@@ -433,6 +458,52 @@ test("stopping before Send preserves the current draft and does not advance or r
   await tick();
   assert.equal(p.sent.length, 0);
   assert.equal(p.openedTabs, 0);
+});
+
+test("a Yandex send response shows its reason and pauses remaining companies without an uncertainty notice", async (t) => {
+  const reason =
+    "Не удалось отправить письмо: Не указаны получатели (illegal_params).";
+  const p = page(new Map(), { rejection: reason });
+  t.after(() => p.close());
+  const root = await p.open();
+  fillProfile(p, root);
+  selectTwo(root);
+  control(root, "Отправить 2 писем").click();
+  await until(
+    () =>
+      results(root)[0]?.querySelector(".badge")?.textContent ===
+      "Ошибка отправки",
+    "the provider's failure must finish the send wait immediately",
+  );
+  const first = results(root)[0];
+  assert.ok(first.querySelector(".error")!.textContent!.includes(reason));
+  assert.equal(first.querySelector<HTMLElement>(".note")!.hidden, false);
+  assert.equal(
+    first.querySelector(".note")!.textContent,
+    "Очередь остановлена. Автоматического повтора не будет.",
+  );
+  assert.ok(dock(root).textContent!.includes(reason));
+  assert.doesNotMatch(
+    first.textContent! + dock(root).textContent!,
+    /могло|подтверждение не получено/,
+  );
+  assert.equal(
+    results(root)[1].querySelector(".badge")!.textContent,
+    "В очереди",
+  );
+  assert.equal(p.composeCount, 1);
+  assert.equal(p.sent.length, 1);
+  assert.equal(p.providerFetches, 1);
+  assert.ok(p.w.document.querySelector(".composeReact"));
+  assert.equal(p.confirmations, 0);
+  const receipts = [...p.values.entries()].filter(([key]) =>
+    key.startsWith("return-pd:receipt:"),
+  );
+  assert.equal(receipts.length, 1);
+  assert.equal((receipts[0][1] as { state: string }).state, "rejected");
+  await tick();
+  assert.equal(p.composeCount, 1);
+  assert.equal(p.sent.length, 1);
 });
 
 test("an unacknowledged send remains uncertain after stopping and is never automatically repeated", async (t) => {

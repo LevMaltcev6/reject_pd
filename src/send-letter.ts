@@ -1,5 +1,9 @@
 import { visible, type PreparedLetter } from "./adapters";
 import { EditorError } from "./editor-errors";
+import {
+  observeYandexSendResponse,
+  type YandexSendFailure,
+} from "./yandex-send-response";
 
 const messages = {
   button_missing:
@@ -23,7 +27,7 @@ export class SendError extends Error {
   }
 }
 
-/** Once the durable send claim starts, no failure proves that nothing was sent. */
+/** Without an explicit provider response, delivery may already have happened. */
 export class SendUncertainError extends Error {
   constructor() {
     super(
@@ -31,6 +35,36 @@ export class SendUncertainError extends Error {
     );
     this.name = "SendUncertainError";
   }
+}
+
+/** The mail provider returned an explicit error for this send attempt. */
+export class SendRejectedError extends Error {
+  constructor(
+    message: string,
+    public readonly code?: string,
+  ) {
+    super(message);
+    this.name = "SendRejectedError";
+  }
+}
+
+function rejectedByYandex(failure: YandexSendFailure) {
+  // Keep the server's reason, including unknown error codes. Do not replace it
+  // with the generic acknowledgement timeout or guess which field was rejected.
+  const reason =
+    failure.message && failure.message !== failure.code
+      ? failure.message
+      : failure.code === "illegal_params"
+        ? "Некоторые поля не заполнены или заполнены неверно."
+        : "";
+  const code = failure.code ? `Код: ${failure.code}.` : "";
+  const http = failure.httpStatus ? `HTTP ${failure.httpStatus}.` : "";
+  return new SendRejectedError(
+    ["Яндекс сообщил об ошибке отправки:", reason, code, http]
+      .filter(Boolean)
+      .join(" "),
+    failure.code,
+  );
 }
 
 const attempted = new WeakSet<PreparedLetter>();
@@ -212,6 +246,7 @@ export async function sendLetter(
 ): Promise<void> {
   let claimed = false;
   let observer: MutationObserver | undefined;
+  let response: ReturnType<typeof observeYandexSendResponse> | undefined;
   try {
     signal.throwIfAborted();
     if (attempted.has(prepared)) throw new SendError("already_attempted");
@@ -295,14 +330,19 @@ export async function sendLetter(
     // Resolve again after the activity check: the selected node may have been replaced.
     const ready = sendButton(prepared);
     if (ready !== button) throw new SendError("button_missing");
+    if (prepared.provider === "yandex")
+      response = observeYandexSendResponse(prepared.root.ownerDocument);
     claimed = true;
     attempted.add(prepared);
     beforeClick();
     signal.throwIfAborted();
+    response?.start();
     button.click();
     // No await is allowed between the durable claim and this one click.
     const sentDeadline = Date.now() + 20000;
     while (Date.now() < sentDeadline) {
+      const failure = response?.getFailure();
+      if (failure) throw rejectedByYandex(failure);
       signal.throwIfAborted();
       observeSuccess();
       if (confirmed) return;
@@ -310,11 +350,13 @@ export async function sendLetter(
     }
     throw new SendUncertainError();
   } catch (error) {
+    if (error instanceof SendRejectedError) throw error;
     if (claimed) throw new SendUncertainError();
     if (signal.aborted) throw new SendError("cancelled");
     if (error instanceof SendError || error instanceof EditorError) throw error;
     throw new SendError("unexpected");
   } finally {
     observer?.disconnect();
+    response?.stop();
   }
 }

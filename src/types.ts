@@ -60,4 +60,5 @@ export interface Item {
   status: Status;
   error?: string;
   attempted?: boolean;
+  rejected?: boolean;
 }

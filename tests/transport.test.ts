@@ -11,6 +11,7 @@ import {
   PREFIX,
   RECEIPT_PREFIX,
   AttemptedError,
+  RejectedError,
   UncertainError,
   Queue,
   cleanExpired,
@@ -229,6 +230,78 @@ for (const provider of ["gmail", "yandex"] as const) {
     f.dom.window.close();
   });
 }
+
+test("Yandex's send response preserves its reason after the click and stores only a rejected receipt", async () => {
+  const f = fixture("yandex");
+  let clicks = 0;
+  let fetches = 0;
+  let providerSend = false;
+  const reason =
+    "Не удалось отправить письмо: Не указаны получатели (illegal_params).";
+  Object.assign(f.dom.window, {
+    fetch: (input: string, init: RequestInit) => {
+      assert.equal(
+        providerSend,
+        true,
+        "only the mail UI may issue the send request",
+      );
+      assert.equal(input, "/web-api/do-send/liza1?_send=true");
+      assert.equal(init.method, "POST");
+      fetches++;
+      return Promise.resolve(
+        Response.json({ status: "error", message: reason }),
+      );
+    },
+  });
+  f.compose.addEventListener("click", () => {
+    document.querySelector<HTMLElement>("[data-test-editor] button")!.onclick =
+      () => {
+        clicks++;
+        providerSend = true;
+        void f.dom.window.fetch("/web-api/do-send/liza1?_send=true", {
+          method: "POST",
+        });
+        providerSend = false;
+      };
+  });
+  try {
+    await assert.rejects(
+      new CurrentTabTransport(f.account).prepare(
+        letter,
+        new AbortController().signal,
+      ),
+      (error: unknown) => {
+        assert.ok(error instanceof RejectedError);
+        assert.ok(!(error instanceof UncertainError));
+        assert.ok(error.message.includes(reason));
+        assert.doesNotMatch(
+          error.message,
+          /могло быть отправлено|подтверждение не получено/,
+        );
+        return true;
+      },
+    );
+    assert.equal(clicks, 1);
+    assert.equal(fetches, 1);
+    assert.equal(f.composes(), 1);
+    assert.equal(f.values.size, 1);
+    assert.equal(([...f.values.values()][0] as SendReceipt).state, "rejected");
+    for (const receipt of f.writes) {
+      assert.deepEqual(Object.keys(receipt as object).sort(), [
+        "expires",
+        "id",
+        "state",
+      ]);
+      assert.doesNotMatch(
+        JSON.stringify(receipt),
+        /illegal_params|получатели|Sensitive|recipient/,
+      );
+    }
+    assert.ok(document.querySelector("[data-test-editor]"));
+  } finally {
+    f.dom.window.close();
+  }
+});
 
 test("draft mode leaves the editor intact, never sends, and rejects replacing it", async () => {
   const f = fixture();

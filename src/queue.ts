@@ -48,6 +48,7 @@ export class Queue {
           continue;
         item.status = "opening";
         item.error = undefined;
+        item.rejected = undefined;
         this.notify();
         try {
           const result = await this.transport.prepare(
@@ -71,6 +72,7 @@ export class Queue {
               ? error.message
               : "Не удалось подготовить письмо.";
           item.attempted = error instanceof AttemptedError;
+          item.rejected = error instanceof RejectedError;
           // A failure may indicate an account change: always pause the remaining queue.
           this.notify();
           break;
@@ -85,6 +87,12 @@ export class Queue {
   }
 }
 export class AttemptedError extends Error {}
+export class RejectedError extends AttemptedError {
+  constructor(message: string) {
+    super(message);
+    this.name = "RejectedError";
+  }
+}
 export class UncertainError extends AttemptedError {
   constructor() {
     super(
@@ -99,7 +107,7 @@ export const TTL = 24 * 60 * 60 * 1000;
 export interface SendReceipt {
   id: string;
   expires: number;
-  state: "sending" | "sent" | "uncertain";
+  state: "sending" | "sent" | "uncertain" | "rejected";
 }
 export interface Job {
   id: string;

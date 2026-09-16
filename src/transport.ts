@@ -1,5 +1,6 @@
 import {
   AttemptedError,
+  RejectedError,
   UncertainError,
   PREFIX,
   RECEIPT_PREFIX,
@@ -9,7 +10,12 @@ import {
   type Transport,
 } from "./queue";
 import { fillLetter, matchesMailContext } from "./adapters";
-import { sendLetter, SendError, SendUncertainError } from "./send-letter";
+import {
+  sendLetter,
+  SendError,
+  SendRejectedError,
+  SendUncertainError,
+} from "./send-letter";
 import type { Account, DeliveryMode, Letter } from "./types";
 import { EditorError, workerErrorMessage } from "./editor-errors";
 
@@ -124,6 +130,18 @@ export class CurrentTabTransport implements Transport {
       } satisfies SendReceipt);
       return "sent";
     } catch (cause) {
+      if (cause instanceof SendRejectedError) {
+        try {
+          store.set(receiptKey, {
+            id,
+            expires,
+            state: "rejected",
+          } satisfies SendReceipt);
+        } catch {
+          // Preserve the provider's response even if the receipt update fails.
+        }
+        throw new RejectedError(cause.message);
+      }
       if (
         committed ||
         cause instanceof SendUncertainError ||

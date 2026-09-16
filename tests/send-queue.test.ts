@@ -1,6 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { Queue, AttemptedError, UncertainError } from "../src/queue";
+import {
+  Queue,
+  AttemptedError,
+  RejectedError,
+  UncertainError,
+} from "../src/queue";
 import type { Letter } from "../src/types";
 
 function letter(index = 0): Letter {
@@ -119,6 +124,37 @@ test("a missing send acknowledgment pauses and can never retry that letter", asy
   await queue.run(true);
   assert.deepEqual(calls, ["company-0", "company-1"]);
   assert.equal(queue.items[0].status, "uncertain");
+});
+
+test("a provider send failure pauses the queue with its reason and continuing skips the attempted company", async () => {
+  const calls: string[] = [];
+  const reason =
+    "Яндекс сообщил об ошибке отправки: Не указаны получатели (код: illegal_params)";
+  const queue = new Queue(
+    [letter(0), letter(1)],
+    {
+      async prepare(current, _signal, progress) {
+        calls.push(current.companyId);
+        progress?.("sending");
+        if (calls.length === 1) throw new RejectedError(reason);
+        return "sent";
+      },
+    },
+    () => {},
+  );
+  await queue.run();
+  assert.deepEqual(calls, ["company-0"]);
+  assert.equal(queue.running, false);
+  assert.equal(queue.items[0].status, "error");
+  assert.equal(queue.items[0].attempted, true);
+  assert.equal(queue.items[0].rejected, true);
+  assert.equal(queue.items[0].error, reason);
+  assert.equal(queue.items[1].status, "queued");
+  await queue.run(true);
+  assert.deepEqual(calls, ["company-0", "company-1"]);
+  assert.equal(queue.items[0].status, "error");
+  assert.equal(queue.items[0].rejected, true);
+  assert.equal(queue.items[1].status, "sent");
 });
 
 test("a failure before opening Compose can be explicitly retried", async () => {
