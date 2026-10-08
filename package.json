@@ -11,9 +11,11 @@
     "test": "tsx --test tests/*.test.ts",
     "check": "npm run typecheck && npm test",
     "preview": "node scripts/preview.mjs",
-    "format": "prettier --write src tests scripts/*.mjs package.json tsconfig.json README.md"
+    "pw": "npm run build && tsx pw/run.ts",
+    "format": "prettier --write src tests pw scripts/*.mjs package.json tsconfig.json README.md"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^22.13.0",
     "esbuild": "^0.25.0",
